@@ -1,6 +1,6 @@
 /**
  * UNDER INVESTIGATION — Stage 2: Break the Silence (stage2.js)
- * High-speed 0 -> 100 -> 0 continuous oscillation with immediate activation.
+ * Interrogation Pressure Meter: Oscillates 0 -> 100 -> 0 continuously.
  * Target ranges: Round 1 (43 to 57), Round 2 (46 to 54), Round 3 (48 to 52).
  * STRICT RULE: ONE MISS = COMPLETE STAGE 2 RESET.
  */
@@ -14,29 +14,29 @@ const ROUND_CONFIG = [
     round: 1,
     minVal: 43.0,
     maxVal: 57.0,
-    speed: 0.0055, // Fast & lively sweep
-    displayText: "43 — 57"
+    cycleDuration: 1300, // ms for 0 -> 100 -> 0 full sweep
+    displayText: "43.0 — 57.0"
   },
   {
     round: 2,
     minVal: 46.0,
     maxVal: 54.0,
-    speed: 0.0075, // Faster
-    displayText: "46 — 54"
+    cycleDuration: 950, // Faster
+    displayText: "46.0 — 54.0"
   },
   {
     round: 3,
     minVal: 48.0,
     maxVal: 52.0,
-    speed: 0.0098, // Intense & fastest
-    displayText: "48 — 52"
+    cycleDuration: 720, // High intensity & precision
+    displayText: "48.0 — 52.0"
   }
 ];
 
 const HINT_MESSAGES = [
-  "WATCH THE NEEDLE ROTATE 0 TO 100.",
-  "THE RED ZONE IS THE SAFE ZONE AROUND 50.",
-  "STOP WHEN THE PRESSURE VALUE IS INSIDE THE TARGET RANGE."
+  "TIME YOUR STOP WHEN THE ROTATING NEEDLE POINTS STRAIGHT UP (50).",
+  "THE RED ZONE IS CONCENTRATED AROUND 50. WATCH THE VALUE 0 TO 100.",
+  "PRESS SPACE OR CLICK [STOP METER] INSIDE THE TARGET ZONE."
 ];
 
 export class Stage2 {
@@ -49,7 +49,8 @@ export class Stage2 {
       clueIndex: 0,
       hintLevel: 0,
       meterRunning: false,
-      failed: false
+      failed: false,
+      isDialogueActive: false
     };
 
     this.pressureValue = 0; // 0 to 100
@@ -90,26 +91,30 @@ export class Stage2 {
     if (this.dom.btnStopMeter) {
       this.dom.btnStopMeter.addEventListener('click', (e) => {
         e.stopPropagation();
+        e.preventDefault();
         this.handleStopAttempt();
       });
     }
 
-    // Spacebar listener for stopping meter
+    // Spacebar / Enter listener for stopping meter or retrying
     window.addEventListener('keydown', (e) => {
-      if (gameState.currentStage === 2 && (e.code === 'Space' || e.code === 'Enter')) {
-        if (this.state.meterRunning && !ui.isDialoguePlaying) {
-          e.preventDefault();
+      if (gameState.currentStage !== 2) return;
+
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        if (this.state.failed) {
+          this.retryStage();
+        } else if (!this.state.isDialogueActive) {
           this.handleStopAttempt();
         }
       }
     });
 
-    // Attach Retry Button on Failure
+    // Attach Retry Button on Failure Modal
     if (this.dom.btnRetry) {
-      this.dom.btnRetry.addEventListener('click', () => {
-        audio.playSFX('ui-click');
-        if (this.dom.failModal) this.dom.failModal.style.display = 'none';
-        this.fullStageReset(true);
+      this.dom.btnRetry.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.retryStage();
       });
     }
 
@@ -119,7 +124,7 @@ export class Stage2 {
     }
   }
 
-  async start() {
+  start() {
     console.log('[Stage 2] Started: Break the Silence');
     audio.playAmbience('stage2_bg');
 
@@ -127,14 +132,15 @@ export class Stage2 {
       this.dom.failModal.style.display = 'none';
     }
 
-    // Run opening dialogue sequence first
-    await ui.showDialogue([
-      { speaker: 'VANCE', text: "Let's hear the rest." },
-      { speaker: 'JAGA', text: "Where do we start?" },
-      { speaker: 'VANCE', text: "With the truth." }
-    ]);
+    // Reset and start Round 1 immediately
+    this.fullStageReset(true);
+  }
 
-    // Start Round 1 immediately!
+  retryStage() {
+    audio.playSFX('ui-click');
+    if (this.dom.failModal) {
+      this.dom.failModal.style.display = 'none';
+    }
     this.fullStageReset(true);
   }
 
@@ -147,10 +153,11 @@ export class Stage2 {
       clueIndex: 0,
       hintLevel: 0,
       meterRunning: false,
-      failed: false
+      failed: false,
+      isDialogueActive: false
     };
 
-    // Remove only stage 2 evidence
+    // Remove only stage 2 evidence on reset
     gameState.removeStage2Evidence();
 
     // Reset visuals
@@ -178,6 +185,8 @@ export class Stage2 {
     if (this.dom.successZone) {
       this.dom.successZone.style.setProperty('--zone-left', `${config.minVal}%`);
       this.dom.successZone.style.setProperty('--zone-width', `${config.maxVal - config.minVal}%`);
+      this.dom.successZone.style.left = `${config.minVal}%`;
+      this.dom.successZone.style.width = `${config.maxVal - config.minVal}%`;
     }
 
     if (this.dom.targetRangeDisplay) {
@@ -192,6 +201,8 @@ export class Stage2 {
   startCurrentRound() {
     this.applyRoundConfig(this.state.round);
     this.state.meterRunning = true;
+    this.state.failed = false;
+    this.state.isDialogueActive = false;
     this.startTime = performance.now();
     this.lastTickTime = performance.now();
     this.runMeterLoop();
@@ -202,34 +213,39 @@ export class Stage2 {
     this.state.meterRunning = true;
 
     const config = ROUND_CONFIG[this.state.round - 1] || ROUND_CONFIG[0];
+    const duration = config.cycleDuration;
 
     const animate = (timestamp) => {
       if (!this.state.meterRunning) return;
 
       const elapsed = timestamp - this.startTime;
       
-      // Continuous sine sweep oscillating smoothly 0 to 100 to 0 repeatedly
-      const sineWave = (Math.sin(elapsed * config.speed) + 1) / 2; // 0.0 to 1.0
-      this.pressureValue = sineWave * 100; // 0.0 to 100.0
+      // Crisp continuous 0 -> 100 -> 0 linear oscillation (Triangle Wave)
+      const cycleProgress = (elapsed % duration) / duration; // 0.0 to 1.0
+      if (cycleProgress < 0.5) {
+        this.pressureValue = cycleProgress * 200.0; // 0 to 100
+      } else {
+        this.pressureValue = (1.0 - cycleProgress) * 200.0; // 100 to 0
+      }
 
-      // Update digital readout directly
+      // 1. Update digital readout
       if (this.dom.pressureValDisplay) {
         this.dom.pressureValDisplay.textContent = this.pressureValue.toFixed(1);
       }
 
-      // Update linear track pointer directly
+      // 2. Update horizontal track pointer
       if (this.dom.meterPointer) {
         this.dom.meterPointer.style.left = `${this.pressureValue}%`;
       }
 
-      // Update circular dial needle rotation directly (-130deg for 0 to +130deg for 100)
-      const dialRot = -130 + (this.pressureValue / 100) * 260;
+      // 3. Update circular wall gauge needle (-130deg pointing at 0 to +130deg pointing at 100)
+      const dialRot = -130.0 + (this.pressureValue / 100.0) * 260.0;
       if (this.dom.dialNeedleWrap) {
         this.dom.dialNeedleWrap.style.transform = `rotate(${dialRot}deg)`;
       }
 
-      // Periodic meter ticking SFX
-      if (timestamp - this.lastTickTime > 180) {
+      // 4. Periodic ticking sound
+      if (timestamp - this.lastTickTime > 140) {
         this.lastTickTime = timestamp;
         audio.playSFX('meter-swing-tick');
       }
@@ -249,7 +265,12 @@ export class Stage2 {
   }
 
   handleStopAttempt() {
-    if (!this.state.meterRunning || this.state.failed) return;
+    if (this.state.failed || this.state.isDialogueActive) return;
+
+    if (!this.state.meterRunning) {
+      this.startCurrentRound();
+      return;
+    }
 
     this.stopMeterLoop();
     const config = ROUND_CONFIG[this.state.round - 1] || ROUND_CONFIG[0];
@@ -266,6 +287,7 @@ export class Stage2 {
 
   async handleRoundSuccess() {
     this.state.streak++;
+    this.state.isDialogueActive = true;
     const currentRound = this.state.round;
 
     // Visual Shock & Screen tremor
@@ -286,16 +308,17 @@ export class Stage2 {
       this.updateCluesTray();
 
       await ui.showDialogue([
-        { speaker: 'JAGA', text: "Where were you supposed to go?" },
-        { speaker: 'LEO', text: "Apartment 69. Gokuldham." }
+        { speaker: 'JAGA', text: "Where were you supposed to meet them?!" },
+        { speaker: 'LEO', text: "Apartment 69! In Gokuldham! That's where they told me to go!" }
       ]);
 
-      // Return Leo image to normal & setup Round 2
+      // Reset expression & launch Round 2
       this.dom.leoImg.src = 'assets/img/stage2_leo_interrogation.png';
       this.dom.sceneContainer.classList.remove('shocked');
+      this.state.isDialogueActive = false;
 
       this.state.round = 2;
-      setTimeout(() => this.startCurrentRound(), 400);
+      this.startCurrentRound();
 
     } else if (currentRound === 2) {
       // Clue 2: Secret Entrance & Handwritten Note
@@ -304,18 +327,17 @@ export class Stage2 {
       this.updateCluesTray();
 
       await ui.showDialogue([
-        { speaker: 'JAGA', text: "Why?" },
-        { speaker: 'LEO', text: "That was the meeting point." },
-        { speaker: 'JAGA', text: "How did they get inside?" },
-        { speaker: 'LEO', text: "When the power cuts, use the secret entrance." }
+        { speaker: 'JAGA', text: "How did you bypass the security cameras?!" },
+        { speaker: 'LEO', text: "When the power cuts, use the secret basement entrance! There's a handwritten code!" }
       ]);
 
-      // Return Leo image to normal & setup Round 3
+      // Reset expression & launch Round 3
       this.dom.leoImg.src = 'assets/img/stage2_leo_interrogation.png';
       this.dom.sceneContainer.classList.remove('shocked');
+      this.state.isDialogueActive = false;
 
       this.state.round = 3;
-      setTimeout(() => this.startCurrentRound(), 400);
+      this.startCurrentRound();
 
     } else if (currentRound === 3) {
       // Clue 3: Locker Phone
@@ -323,19 +345,14 @@ export class Stage2 {
       this.updateCluesTray();
 
       await ui.showDialogue([
-        { speaker: 'JAGA', text: "Who told you?" },
-        { speaker: 'LEO', text: "I don't know." },
-        { speaker: 'JAGA', text: "How were you contacted?" },
-        { speaker: 'LEO', text: "Through a phone." },
-        { speaker: 'JAGA', text: "Where is it?" },
-        { speaker: 'LEO', text: "Inside a locker." }
+        { speaker: 'JAGA', text: "Who gave the order?!" },
+        { speaker: 'LEO', text: "I swear I never saw their face! Everything was arranged through a burner phone inside the locker!" }
       ]);
 
-      // Completion Sequence
+      // Final Stage 2 Wrap up
       await ui.showDialogue([
-        { speaker: 'NARRATOR', text: "THREE CLUES. ONE LOCATION. ONE PHONE. ONE SECRET." },
-        { speaker: 'JAGA', text: "Apartment 69. Secret entrance. Locker phone." },
-        { speaker: 'VANCE', text: "Then that's where we go." }
+        { speaker: 'VANCE', text: "Apartment 69. Secret entrance. Locker phone. That's our lead." },
+        { speaker: 'JAGA', text: "Let's breach Apartment 69 and recover that phone." }
       ]);
 
       gameState.setFlag('stage2Complete', true);
@@ -343,7 +360,7 @@ export class Stage2 {
 
       setTimeout(() => {
         gameState.setStage(3);
-      }, 600);
+      }, 400);
     }
   }
 
@@ -376,21 +393,24 @@ export class Stage2 {
     if (this.dom.slot1) {
       const hasClue1 = gameState.hasEvidence('apartment-69');
       this.dom.slot1.classList.toggle('unlocked', hasClue1);
-      this.dom.slot1.querySelector('.s2-slot-status').textContent = hasClue1 ? '✓ APARTMENT 69' : '[ ??? ]';
+      const statusEl = this.dom.slot1.querySelector('.s2-slot-status');
+      if (statusEl) statusEl.textContent = hasClue1 ? '✓ APARTMENT 69' : '[ ??? ]';
     }
 
     // Slot 2: Secret Entrance
     if (this.dom.slot2) {
       const hasClue2 = gameState.hasEvidence('secret-entrance');
       this.dom.slot2.classList.toggle('unlocked', hasClue2);
-      this.dom.slot2.querySelector('.s2-slot-status').textContent = hasClue2 ? '✓ SECRET ENTRANCE' : '[ ??? ]';
+      const statusEl = this.dom.slot2.querySelector('.s2-slot-status');
+      if (statusEl) statusEl.textContent = hasClue2 ? '✓ SECRET ENTRANCE' : '[ ??? ]';
     }
 
     // Slot 3: Locker Phone
     if (this.dom.slot3) {
       const hasClue3 = gameState.hasEvidence('locker-phone');
       this.dom.slot3.classList.toggle('unlocked', hasClue3);
-      this.dom.slot3.querySelector('.s2-slot-status').textContent = hasClue3 ? '✓ LOCKER PHONE' : '[ ??? ]';
+      const statusEl = this.dom.slot3.querySelector('.s2-slot-status');
+      if (statusEl) statusEl.textContent = hasClue3 ? '✓ LOCKER PHONE' : '[ ??? ]';
     }
   }
 
@@ -412,6 +432,8 @@ export class Stage2 {
 
   cleanup() {
     this.stopMeterLoop();
+    this.state.failed = false;
+    this.state.isDialogueActive = false;
     if (this.dom.failModal) this.dom.failModal.style.display = 'none';
     if (this.dom.hintToast) this.dom.hintToast.style.display = 'none';
   }

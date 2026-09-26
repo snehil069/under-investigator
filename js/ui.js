@@ -25,10 +25,17 @@ class UIManager {
     this.evidenceDrawer = document.getElementById('evidence-drawer');
     this.evidenceList = document.getElementById('evidence-list');
 
-    // Dialogue advance click
+    // Dialogue advance click on overlay
     if (this.dialogueOverlay) {
       this.dialogueOverlay.addEventListener('click', () => this.advanceDialogue());
     }
+
+    // Global click advances dialogue if open (unless clicking a game action button)
+    document.addEventListener('click', (e) => {
+      if (this.isDialoguePlaying && !e.target.closest('#btn-s2-stop-meter') && !e.target.closest('#btn-toggle-evidence')) {
+        this.advanceDialogue();
+      }
+    });
 
     // Keyboard support for dialogue advance
     window.addEventListener('keydown', (e) => {
@@ -61,6 +68,8 @@ class UIManager {
       if (event === 'evidence_added') {
         this.renderEvidenceList();
         this.showToast(`EVIDENCE ACQUIRED: ${data.name}`);
+      } else if (event === 'stage2_evidence_cleared' || event === 'evidence_removed') {
+        this.renderEvidenceList();
       }
     });
   }
@@ -70,35 +79,35 @@ class UIManager {
       this.dialogueQueue = Array.isArray(dialogueLines) ? [...dialogueLines] : [dialogueLines];
       this.currentDialogueResolve = resolve;
       this.isDialoguePlaying = true;
-      this.dialogueOverlay.classList.add('visible');
+      if (this.dialogueOverlay) {
+        this.dialogueOverlay.classList.add('visible');
+      }
       this.processNextDialogueLine();
     });
   }
 
   processNextDialogueLine() {
     if (this.dialogueQueue.length === 0) {
-      this.isDialoguePlaying = false;
-      this.dialogueOverlay.classList.remove('visible');
-      if (this.currentDialogueResolve) {
-        const res = this.currentDialogueResolve;
-        this.currentDialogueResolve = null;
-        res();
-      }
+      this.dismissDialogue();
       return;
     }
 
     const currentLine = this.dialogueQueue.shift();
     
     // Set speaker
-    this.speakerElem.textContent = currentLine.speaker;
-    this.speakerElem.className = 'dialogue-speaker';
-    const speakerKey = currentLine.speaker.toLowerCase();
-    if (['vance', 'jaga', 'leo', 'maya'].includes(speakerKey)) {
-      this.speakerElem.classList.add(`speaker-${speakerKey}`);
+    if (this.speakerElem) {
+      this.speakerElem.textContent = currentLine.speaker;
+      this.speakerElem.className = 'dialogue-speaker';
+      const speakerKey = currentLine.speaker.toLowerCase();
+      if (['vance', 'jaga', 'leo', 'maya'].includes(speakerKey)) {
+        this.speakerElem.classList.add(`speaker-${speakerKey}`);
+      }
     }
 
     // Display text
-    this.textElem.textContent = currentLine.text;
+    if (this.textElem) {
+      this.textElem.textContent = currentLine.text;
+    }
 
     // Play Voice MP3 if provided
     if (currentLine.voice) {
@@ -111,6 +120,19 @@ class UIManager {
   advanceDialogue() {
     if (!this.isDialoguePlaying) return;
     this.processNextDialogueLine();
+  }
+
+  dismissDialogue() {
+    this.dialogueQueue = [];
+    this.isDialoguePlaying = false;
+    if (this.dialogueOverlay) {
+      this.dialogueOverlay.classList.remove('visible');
+    }
+    if (this.currentDialogueResolve) {
+      const res = this.currentDialogueResolve;
+      this.currentDialogueResolve = null;
+      res();
+    }
   }
 
   toggleEvidenceDrawer() {
@@ -165,7 +187,8 @@ class UIManager {
     toast.style.letterSpacing = '1px';
     toast.textContent = message;
 
-    document.getElementById('game-container').appendChild(toast);
+    const container = document.getElementById('game-container') || document.body;
+    container.appendChild(toast);
     audio.playSFX('discovery-chime');
 
     setTimeout(() => {
