@@ -684,12 +684,56 @@
 /* Target Arc Wedge Highlight on Dial */
 .s2-dial-target-wedge {
   position: absolute;
-  inset: 12%;
+  inset: 6%;
   border-radius: 50%;
-  border: 4px solid rgba(255, 50, 0, 0.4);
-  box-shadow: 0 0 15px rgba(255, 50, 0, 0.6);
   pointer-events: none;
+  background: conic-gradient(from 0deg at 50% 50%, rgba(255, 30, 0, 0.45) 0deg, rgba(255, 30, 0, 0.45) 18deg, transparent 18deg, transparent 342deg, rgba(255, 30, 0, 0.45) 342deg, rgba(255, 30, 0, 0.45) 360deg);
+  border: 2px dashed rgba(255, 80, 50, 0.85);
+  box-shadow: 0 0 16px rgba(255, 50, 0, 0.7);
   transition: all 0.3s ease;
+  z-index: 15;
+}
+
+/* Prominent Stop Marker Notch at Top (50 mark) */
+.s2-dial-target-notch {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid #ff3300;
+  filter: drop-shadow(0 0 6px #ff2200);
+  z-index: 30;
+  pointer-events: none;
+  animation: s2-notch-bounce 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes s2-notch-bounce {
+  from { transform: translateX(-50%) translateY(0); }
+  to { transform: translateX(-50%) translateY(3px); }
+}
+
+.s2-dial-target-label {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(179, 38, 30, 0.95);
+  color: #fff;
+  font-family: var(--font-typewriter);
+  font-size: 8px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  padding: 1px 5px;
+  border: 1px solid #ff6655;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(255, 50, 0, 0.8);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 30;
 }
 
 /* Rotating Needle Wrap */

@@ -1,7 +1,7 @@
 /**
  * UNDER INVESTIGATION — Stage 2: Break the Silence (stage2.js)
  * Interrogation Pressure Meter: Oscillates 0 -> 100 -> 0 continuously.
- * Target ranges: Round 1 (43 to 57), Round 2 (46 to 54), Round 3 (48 to 52).
+ * Target ranges: Round 1 (43.0 to 57.0), Round 2 (46.0 to 54.0), Round 3 (48.0 to 52.0).
  * STRICT RULE: ONE MISS = COMPLETE STAGE 2 RESET.
  */
 
@@ -14,27 +14,30 @@ const ROUND_CONFIG = [
     round: 1,
     minVal: 43.0,
     maxVal: 57.0,
-    cycleDuration: 1300, // ms for 0 -> 100 -> 0 full sweep
-    displayText: "43.0 — 57.0"
+    cycleDuration: 2800, // Relaxed, comfortable 2.8s sweep
+    displayText: "43.0 — 57.0",
+    wedgeHalfAngle: 18.2 // +/- 18.2 deg around top 0deg
   },
   {
     round: 2,
     minVal: 46.0,
     maxVal: 54.0,
-    cycleDuration: 950, // Faster
-    displayText: "46.0 — 54.0"
+    cycleDuration: 2200, // Smooth 2.2s sweep
+    displayText: "46.0 — 54.0",
+    wedgeHalfAngle: 10.4 // +/- 10.4 deg
   },
   {
     round: 3,
     minVal: 48.0,
     maxVal: 52.0,
-    cycleDuration: 720, // High intensity & precision
-    displayText: "48.0 — 52.0"
+    cycleDuration: 1800, // Focused 1.8s sweep
+    displayText: "48.0 — 52.0",
+    wedgeHalfAngle: 5.2 // +/- 5.2 deg
   }
 ];
 
 const HINT_MESSAGES = [
-  "TIME YOUR STOP WHEN THE ROTATING NEEDLE POINTS STRAIGHT UP (50).",
+  "TIME YOUR STOP WHEN THE ROTATING NEEDLE POINTS AT THE TOP 'STOP ZONE' (50).",
   "THE RED ZONE IS CONCENTRATED AROUND 50. WATCH THE VALUE 0 TO 100.",
   "PRESS SPACE OR CLICK [STOP METER] INSIDE THE TARGET ZONE."
 ];
@@ -56,7 +59,6 @@ export class Stage2 {
     this.pressureValue = 0; // 0 to 100
     this.animFrameId = null;
     this.startTime = 0;
-    this.lastTickTime = 0;
 
     this.dom = {};
   }
@@ -70,6 +72,7 @@ export class Stage2 {
       pip3: document.getElementById('s2-pip-3'),
       sceneContainer: document.getElementById('s2-scene-container'),
       leoImg: document.getElementById('s2-leo-img'),
+      dialTargetWedge: document.getElementById('s2-dial-target-wedge'),
       dialNeedleWrap: document.getElementById('s2-dial-needle-wrap'),
       pressureValDisplay: document.getElementById('s2-pressure-val'),
       targetRangeDisplay: document.getElementById('s2-target-range-text'),
@@ -181,12 +184,20 @@ export class Stage2 {
   applyRoundConfig(roundNum) {
     const config = ROUND_CONFIG[roundNum - 1] || ROUND_CONFIG[0];
     
-    // Position success zone on track & digital display
+    // 1. Position success zone on horizontal track
     if (this.dom.successZone) {
       this.dom.successZone.style.setProperty('--zone-left', `${config.minVal}%`);
       this.dom.successZone.style.setProperty('--zone-width', `${config.maxVal - config.minVal}%`);
       this.dom.successZone.style.left = `${config.minVal}%`;
       this.dom.successZone.style.width = `${config.maxVal - config.minVal}%`;
+    }
+
+    // 2. Position target mark on the circular dial
+    if (this.dom.dialTargetWedge) {
+      const halfAngle = config.wedgeHalfAngle;
+      const startDeg = 360 - halfAngle;
+      const endDeg = halfAngle;
+      this.dom.dialTargetWedge.style.background = `conic-gradient(from 0deg at 50% 50%, rgba(255, 30, 0, 0.55) 0deg, rgba(255, 30, 0, 0.55) ${endDeg}deg, transparent ${endDeg}deg, transparent ${startDeg}deg, rgba(255, 30, 0, 0.55) ${startDeg}deg, rgba(255, 30, 0, 0.55) 360deg)`;
     }
 
     if (this.dom.targetRangeDisplay) {
@@ -204,7 +215,6 @@ export class Stage2 {
     this.state.failed = false;
     this.state.isDialogueActive = false;
     this.startTime = performance.now();
-    this.lastTickTime = performance.now();
     this.runMeterLoop();
   }
 
@@ -220,7 +230,7 @@ export class Stage2 {
 
       const elapsed = timestamp - this.startTime;
       
-      // Crisp continuous 0 -> 100 -> 0 linear oscillation (Triangle Wave)
+      // Smooth continuous 0 -> 100 -> 0 linear oscillation (Triangle Wave)
       const cycleProgress = (elapsed % duration) / duration; // 0.0 to 1.0
       if (cycleProgress < 0.5) {
         this.pressureValue = cycleProgress * 200.0; // 0 to 100
@@ -242,12 +252,6 @@ export class Stage2 {
       const dialRot = -130.0 + (this.pressureValue / 100.0) * 260.0;
       if (this.dom.dialNeedleWrap) {
         this.dom.dialNeedleWrap.style.transform = `rotate(${dialRot}deg)`;
-      }
-
-      // 4. Periodic ticking sound
-      if (timestamp - this.lastTickTime > 140) {
-        this.lastTickTime = timestamp;
-        audio.playSFX('meter-swing-tick');
       }
 
       this.animFrameId = requestAnimationFrame(animate);
