@@ -18,3 +18,5 @@ asset/**/previous*
 .vscode/
 .idea/
 *.swp
+
+.vercel
