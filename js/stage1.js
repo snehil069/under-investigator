@@ -126,6 +126,7 @@ export class Stage1 {
     }
 
     if (this.dom.characterMover) {
+      this.dom.characterMover.style.animationDuration = '1.45s';
       this.dom.characterMover.style.animationPlayState = 'running';
     }
 
@@ -142,6 +143,19 @@ export class Stage1 {
     }
 
     this.updateHUD();
+  }
+
+  updateMoverSpeed() {
+    if (!this.dom.characterMover) return;
+    
+    // Dynamic difficulty: accelerates as hits land
+    let duration = '1.45s';
+    if (this.totalHits >= 11) {
+      duration = '0.78s'; // Maximum intense evasion
+    } else if (this.totalHits >= 6) {
+      duration = '1.05s'; // Fast dodging
+    }
+    this.dom.characterMover.style.animationDuration = duration;
   }
 
   startArcadeAction() {
@@ -214,6 +228,7 @@ export class Stage1 {
     this.triggerPunchEffect(zoneKey, event);
     this.updateHUD();
     this.updateExpression();
+    this.updateMoverSpeed();
 
     // Check Win Condition
     if (this.totalHits >= TARGET_TOTAL_HITS) {
