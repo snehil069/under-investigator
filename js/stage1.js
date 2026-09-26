@@ -294,13 +294,11 @@ export class Stage1 {
     if (!this.dom.characterImg) return;
 
     let targetImg = 'assets/img/leo1.png';
-    if (this.totalHits >= 12) {
-      targetImg = 'assets/img/leodefeat.png';
-    } else if (this.totalHits >= 9) {
+    if (this.totalHits >= 11) {
       targetImg = 'assets/img/leo4.png';
-    } else if (this.totalHits >= 6) {
+    } else if (this.totalHits >= 7) {
       targetImg = 'assets/img/leo3.png';
-    } else if (this.totalHits >= 3) {
+    } else if (this.totalHits >= 4) {
       targetImg = 'assets/img/leo2.png';
     }
 
