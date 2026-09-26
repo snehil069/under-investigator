@@ -1,0 +1,359 @@
+/* ==========================================================================
+   UNDER INVESTIGATION — BASE THEME (Case-File Noir)
+   ========================================================================== */
+
+:root {
+  --bg-dark: #0f0e0c;
+  --bg-desk: #1a1612;
+  --bg-paper: #e8ded1;
+  --bg-paper-dark: #d8cbbe;
+  --bg-card: #f4eee6;
+  
+  --ink-primary: #1e1b18;
+  --ink-muted: #5c554e;
+  --ink-faint: #8c8278;
+
+  --accent-red: #b3261e;
+  --accent-red-hover: #cf2c23;
+  --accent-red-faint: rgba(179, 38, 30, 0.15);
+  
+  --accent-vance: #2b5c8f;
+  --accent-jaga: #8a4b2d;
+  --accent-leo: #7a6d20;
+  --accent-maya: #853754;
+
+  --border-dark: #2c241e;
+  --border-light: #c2b4a5;
+  --shadow-hard: 4px 4px 0px rgba(0, 0, 0, 0.85);
+  --shadow-subtle: 0 8px 24px rgba(0, 0, 0, 0.6);
+  
+  --font-typewriter: 'Courier Prime', 'Special Elite', 'Courier New', monospace;
+  --font-display: 'Impact', 'Arial Black', sans-serif;
+  --font-body: 'Georgia', 'Times New Roman', serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-dark);
+  color: var(--ink-primary);
+  font-family: var(--font-body);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ==========================================================================
+   GAME CONTAINER & SCREEN SYSTEM
+   ========================================================================== */
+
+#game-container {
+  position: relative;
+  width: 100vw;
+  max-width: 1200px;
+  height: 100vh;
+  max-height: 800px;
+  background: radial-gradient(circle at center, #26201b 0%, #120f0d 100%);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+  border: 4px solid var(--border-dark);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* CRT / Vignette Overlay */
+.vignette-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 60%, rgba(0, 0, 0, 0.75) 100%);
+  z-index: 90;
+}
+
+/* Stage Sections Router */
+.stage-section {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.stage-section.active {
+  display: flex;
+}
+
+/* ==========================================================================
+   GLOBAL HEADER & CONTROLS
+   ========================================================================== */
+
+#global-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  background: rgba(15, 14, 12, 0.92);
+  border-bottom: 2px solid var(--border-dark);
+  z-index: 100;
+}
+
+.case-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge-tag {
+  background: var(--accent-red);
+  color: #fff;
+  font-family: var(--font-typewriter);
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.case-title {
+  color: #d8cbbe;
+  font-family: var(--font-typewriter);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-header {
+  background: var(--bg-paper);
+  border: 2px solid var(--border-dark);
+  padding: 6px 14px;
+  font-family: var(--font-typewriter);
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--ink-primary);
+  cursor: pointer;
+  box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+  transition: transform 0.1s, background 0.1s;
+}
+
+.btn-header:hover {
+  background: #fff;
+  transform: translate(-1px, -1px);
+}
+
+.btn-header:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   CASE-FILE PAPER CARDS & TYPOGRAPHY
+   ========================================================================== */
+
+.paper-card {
+  background: var(--bg-paper);
+  border: 2px solid var(--border-dark);
+  box-shadow: var(--shadow-hard);
+  padding: 24px;
+  position: relative;
+}
+
+.paper-card::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 14px;
+  background: rgba(220, 50, 40, 0.7);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.classified-stamp {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  border: 3px solid var(--accent-red);
+  color: var(--accent-red);
+  font-family: var(--font-typewriter);
+  font-size: 14px;
+  font-weight: bold;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transform: rotate(8deg);
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   DIALOGUE SYSTEM
+   ========================================================================== */
+
+#dialogue-overlay {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  background: var(--bg-card);
+  border: 3px solid var(--border-dark);
+  box-shadow: var(--shadow-hard);
+  padding: 18px 24px;
+  z-index: 150;
+  display: none;
+  cursor: pointer;
+}
+
+#dialogue-overlay.visible {
+  display: block;
+}
+
+.dialogue-speaker {
+  font-family: var(--font-typewriter);
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--border-dark);
+  color: #fff;
+}
+
+.speaker-vance { background: var(--accent-vance); color: #fff; }
+.speaker-jaga { background: var(--accent-jaga); color: #fff; }
+.speaker-leo { background: var(--accent-leo); color: #fff; }
+.speaker-maya { background: var(--accent-maya); color: #fff; }
+
+.dialogue-text {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--ink-primary);
+}
+
+.dialogue-prompt {
+  margin-top: 8px;
+  font-family: var(--font-typewriter);
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-align: right;
+  letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   EVIDENCE DRAWER & MODAL
+   ========================================================================== */
+
+#evidence-drawer {
+  position: absolute;
+  top: 52px;
+  right: -360px;
+  width: 360px;
+  bottom: 0;
+  background: var(--bg-paper-dark);
+  border-left: 3px solid var(--border-dark);
+  box-shadow: -8px 0 24px rgba(0,0,0,0.7);
+  z-index: 120;
+  transition: right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+#evidence-drawer.open {
+  right: 0;
+}
+
+.drawer-header {
+  padding: 16px;
+  background: var(--border-dark);
+  color: #fff;
+  font-family: var(--font-typewriter);
+  font-size: 14px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.evidence-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.evidence-card-item {
+  background: var(--bg-card);
+  border: 2px solid var(--border-dark);
+  padding: 12px;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+}
+
+.evidence-card-title {
+  font-family: var(--font-typewriter);
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--accent-red);
+  margin-bottom: 4px;
+}
+
+.evidence-card-desc {
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.3;
+}
+
+/* ==========================================================================
+   ACTION BUTTONS
+   ========================================================================== */
+
+.btn-primary {
+  background: var(--accent-red);
+  color: #fff;
+  border: 2px solid var(--border-dark);
+  padding: 12px 24px;
+  font-family: var(--font-typewriter);
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: var(--shadow-hard);
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+
+.btn-primary:hover {
+  background: var(--accent-red-hover);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px rgba(0,0,0,0.85);
+}
+
+.btn-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}

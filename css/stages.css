@@ -1,0 +1,247 @@
+/* ==========================================================================
+   UNDER INVESTIGATION — PER-STAGE LAYOUTS (stages.css)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   STAGE 0: TITLE & PROLOGUE
+   -------------------------------------------------------------------------- */
+#stage-0 {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: radial-gradient(circle, #2a2018 0%, #0d0a08 100%);
+  padding-top: 52px;
+}
+
+#stage-0.active {
+  display: flex;
+}
+
+.title-card {
+  max-width: 680px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.main-title {
+  font-family: var(--font-display);
+  font-size: 48px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink-primary);
+  line-height: 1.1;
+  border-bottom: 3px solid var(--accent-red);
+  padding-bottom: 8px;
+}
+
+.tagline {
+  font-family: var(--font-typewriter);
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--accent-red);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.prologue-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  text-align: left;
+  border-left: 3px solid var(--border-dark);
+  padding-left: 14px;
+  margin: 10px 0;
+}
+
+/* --------------------------------------------------------------------------
+   STAGE 1: HIT THE SUSPECT
+   -------------------------------------------------------------------------- */
+#stage-1 {
+  display: none;
+  padding-top: 64px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#stage-1.active {
+  display: flex;
+}
+
+.stage-hud {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-paper);
+  border: 2px solid var(--border-dark);
+  padding: 8px 16px;
+  font-family: var(--font-typewriter);
+  font-weight: bold;
+}
+
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-value {
+  color: var(--accent-red);
+  font-size: 18px;
+}
+
+.target-arena {
+  position: relative;
+  width: 500px;
+  height: 520px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px dashed var(--border-light);
+  background: rgba(0,0,0,0.2);
+}
+
+.suspect-target-face {
+  width: 320px;
+  height: 420px;
+  object-fit: cover;
+  border: 4px solid var(--border-dark);
+  box-shadow: var(--shadow-hard);
+  position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   STAGE 2: BREAK THE SILENCE (PRESSURE METER)
+   -------------------------------------------------------------------------- */
+#stage-2 {
+  display: none;
+  padding-top: 64px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+#stage-2.active {
+  display: flex;
+}
+
+.interrogation-panel {
+  width: 90%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   STAGE 3: FIND THE CLUE (APARTMENT 69)
+   -------------------------------------------------------------------------- */
+#stage-3 {
+  display: none;
+  padding-top: 64px;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+#stage-3.active {
+  display: flex;
+}
+
+.room-investigation-view {
+  width: 100%;
+  max-width: 900px;
+  height: 480px;
+  background: #1e1914;
+  border: 3px solid var(--border-dark);
+  position: relative;
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   STAGE 4: FIND THE LIAR
+   -------------------------------------------------------------------------- */
+#stage-4 {
+  display: none;
+  padding-top: 64px;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+#stage-4.active {
+  display: flex;
+}
+
+.suspects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  width: 100%;
+  max-width: 980px;
+}
+
+/* --------------------------------------------------------------------------
+   STAGE 5: SOLVE THE CASE & REVEAL
+   -------------------------------------------------------------------------- */
+#stage-5 {
+  display: none;
+  padding-top: 64px;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+#stage-5.active {
+  display: flex;
+}
+
+.case-deduction-board {
+  width: 100%;
+  max-width: 900px;
+  min-height: 480px;
+  background: var(--bg-paper);
+  border: 3px solid var(--border-dark);
+  padding: 24px;
+  position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   GLITCH & SCREEN SHAKE FX
+   -------------------------------------------------------------------------- */
+.glitch-effect {
+  animation: glitch-anim 0.25s infinite;
+  filter: contrast(1.5) hue-rotate(90deg);
+}
+
+@keyframes glitch-anim {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-3px, 2px); }
+  50% { transform: translate(3px, -2px); }
+  75% { transform: translate(-2px, -3px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* --------------------------------------------------------------------------
+   ENDING SCREEN
+   -------------------------------------------------------------------------- */
+#stage-ending {
+  display: none;
+  padding-top: 64px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+}
+
+#stage-ending.active {
+  display: flex;
+}
