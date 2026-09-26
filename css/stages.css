@@ -926,13 +926,82 @@
   text-shadow: 0 0 4px #000;
 }
 
-/* Stop Button */
-.s2-stop-btn {
+/* Stop & Next Buttons */
+.s2-stop-btn, .s2-next-btn {
   min-width: 210px;
   min-height: 48px;
   padding: 10px 18px;
   font-size: 14px;
   letter-spacing: 1.5px;
+}
+
+.s2-next-btn {
+  background: #2e7d32;
+  border-color: #1b5e20;
+  animation: s2-pulse-green 1.5s infinite alternate;
+}
+
+.s2-next-btn:hover {
+  background: #388e3c;
+}
+
+@keyframes s2-pulse-green {
+  from { box-shadow: 0 0 6px #2e7d32; }
+  to { box-shadow: 0 0 16px #4caf50; }
+}
+
+/* In-Chamber Speech / Confession Box */
+.s2-confession-box {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  background: rgba(22, 17, 13, 0.95);
+  border: 2px solid #2e7d32;
+  border-radius: 4px;
+  padding: 8px 16px;
+  box-shadow: 0 0 14px rgba(46, 125, 50, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: s2-slide-up 0.25s ease-out;
+}
+
+@keyframes s2-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.s2-confession-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.s2-confession-speaker {
+  font-family: var(--font-typewriter);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  background: var(--accent-leo);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+.s2-confession-status {
+  font-family: var(--font-typewriter);
+  font-size: 11px;
+  font-weight: bold;
+  color: #66bb6a;
+  letter-spacing: 1px;
+}
+
+.s2-confession-text {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: #fff;
+  font-style: italic;
+  line-height: 1.3;
 }
 
 /* Live Stage 2 Clues Discovered Tray */

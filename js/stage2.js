@@ -1,7 +1,9 @@
 /**
  * UNDER INVESTIGATION — Stage 2: Break the Silence (stage2.js)
- * Interrogation Pressure Meter: Oscillates 0 -> 100 -> 0 continuously.
- * Target ranges: Round 1 (43.0 to 57.0), Round 2 (46.0 to 54.0), Round 3 (48.0 to 52.0).
+ * Interrogation Pressure Meter: 3 separate consecutive rounds.
+ * Round 1: Target 43.0 — 57.0 -> Clue 1 (Apartment 69)
+ * Round 2: Target 46.0 — 54.0 -> Clue 2 (Secret Entrance & Note)
+ * Round 3: Target 48.0 — 52.0 -> Clue 3 (Locker Phone)
  * STRICT RULE: ONE MISS = COMPLETE STAGE 2 RESET.
  */
 
@@ -14,25 +16,37 @@ const ROUND_CONFIG = [
     round: 1,
     minVal: 43.0,
     maxVal: 57.0,
-    cycleDuration: 2800, // Relaxed, comfortable 2.8s sweep
+    cycleDuration: 2800, // Relaxed 2.8s sweep
     displayText: "43.0 — 57.0",
-    wedgeHalfAngle: 18.2 // +/- 18.2 deg around top 0deg
+    wedgeHalfAngle: 18.2,
+    clueKey: 'apartment-69',
+    clueName: 'APARTMENT 69',
+    confession: '"Apartment 69! In Gokuldham! That\'s where they told me to go!"',
+    nextBtnText: 'EXTRACT 2ND CLUE (ROUND 2) ▶'
   },
   {
     round: 2,
     minVal: 46.0,
     maxVal: 54.0,
-    cycleDuration: 2200, // Smooth 2.2s sweep
+    cycleDuration: 2200, // 2.2s sweep
     displayText: "46.0 — 54.0",
-    wedgeHalfAngle: 10.4 // +/- 10.4 deg
+    wedgeHalfAngle: 10.4,
+    clueKey: 'secret-entrance',
+    clueName: 'SECRET ENTRANCE',
+    confession: '"When the power cuts, use the secret basement entrance! There\'s a handwritten code!"',
+    nextBtnText: 'EXTRACT FINAL CLUE (ROUND 3) ▶'
   },
   {
     round: 3,
     minVal: 48.0,
     maxVal: 52.0,
-    cycleDuration: 1800, // Focused 1.8s sweep
+    cycleDuration: 1800, // 1.8s sweep
     displayText: "48.0 — 52.0",
-    wedgeHalfAngle: 5.2 // +/- 5.2 deg
+    wedgeHalfAngle: 5.2,
+    clueKey: 'locker-phone',
+    clueName: 'LOCKER PHONE',
+    confession: '"I swear I never saw their face! Everything was arranged through a burner phone inside the locker!"',
+    nextBtnText: 'PROCEED TO APARTMENT 69 ▶'
   }
 ];
 
@@ -49,11 +63,10 @@ export class Stage2 {
     this.state = {
       round: 1,
       streak: 0,
-      clueIndex: 0,
       hintLevel: 0,
       meterRunning: false,
-      failed: false,
-      isDialogueActive: false
+      isRoundResolved: false, // True between stopping and clicking Next Round
+      failed: false
     };
 
     this.pressureValue = 0; // 0 to 100
@@ -80,6 +93,10 @@ export class Stage2 {
       successZone: document.getElementById('s2-success-zone'),
       meterPointer: document.getElementById('s2-meter-pointer'),
       btnStopMeter: document.getElementById('btn-s2-stop-meter'),
+      btnNextRound: document.getElementById('btn-s2-next-round'),
+      confessionBox: document.getElementById('s2-confession-box'),
+      confessionStatus: document.getElementById('s2-confession-status'),
+      confessionText: document.getElementById('s2-confession-text'),
       btnHint: document.getElementById('btn-s2-hint'),
       hintToast: document.getElementById('s2-hint-toast'),
       slot1: document.getElementById('s2-slot-1'),
@@ -99,7 +116,16 @@ export class Stage2 {
       });
     }
 
-    // Spacebar / Enter listener for stopping meter or retrying
+    // Attach Next Round Button
+    if (this.dom.btnNextRound) {
+      this.dom.btnNextRound.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        this.handleNextRound();
+      });
+    }
+
+    // Spacebar / Enter listener
     window.addEventListener('keydown', (e) => {
       if (gameState.currentStage !== 2) return;
 
@@ -107,7 +133,9 @@ export class Stage2 {
         e.preventDefault();
         if (this.state.failed) {
           this.retryStage();
-        } else if (!this.state.isDialogueActive) {
+        } else if (this.state.isRoundResolved) {
+          this.handleNextRound();
+        } else if (this.state.meterRunning) {
           this.handleStopAttempt();
         }
       }
@@ -135,7 +163,7 @@ export class Stage2 {
       this.dom.failModal.style.display = 'none';
     }
 
-    // Reset and start Round 1 immediately
+    // Reset and start Round 1
     this.fullStageReset(true);
   }
 
@@ -153,11 +181,10 @@ export class Stage2 {
     this.state = {
       round: 1,
       streak: 0,
-      clueIndex: 0,
       hintLevel: 0,
       meterRunning: false,
-      failed: false,
-      isDialogueActive: false
+      isRoundResolved: false,
+      failed: false
     };
 
     // Remove only stage 2 evidence on reset
@@ -169,6 +196,15 @@ export class Stage2 {
     }
     if (this.dom.sceneContainer) {
       this.dom.sceneContainer.classList.remove('shocked');
+    }
+    if (this.dom.confessionBox) {
+      this.dom.confessionBox.style.display = 'none';
+    }
+    if (this.dom.btnNextRound) {
+      this.dom.btnNextRound.style.display = 'none';
+    }
+    if (this.dom.btnStopMeter) {
+      this.dom.btnStopMeter.style.display = 'block';
     }
 
     this.pressureValue = 0;
@@ -213,7 +249,25 @@ export class Stage2 {
     this.applyRoundConfig(this.state.round);
     this.state.meterRunning = true;
     this.state.failed = false;
-    this.state.isDialogueActive = false;
+    this.state.isRoundResolved = false;
+
+    // Visual buttons reset
+    if (this.dom.confessionBox) {
+      this.dom.confessionBox.style.display = 'none';
+    }
+    if (this.dom.btnNextRound) {
+      this.dom.btnNextRound.style.display = 'none';
+    }
+    if (this.dom.btnStopMeter) {
+      this.dom.btnStopMeter.style.display = 'block';
+    }
+    if (this.dom.leoImg) {
+      this.dom.leoImg.src = 'assets/img/stage2_leo_interrogation.png';
+    }
+    if (this.dom.sceneContainer) {
+      this.dom.sceneContainer.classList.remove('shocked');
+    }
+
     this.startTime = performance.now();
     this.runMeterLoop();
   }
@@ -230,7 +284,7 @@ export class Stage2 {
 
       const elapsed = timestamp - this.startTime;
       
-      // Smooth continuous 0 -> 100 -> 0 linear oscillation (Triangle Wave)
+      // Continuous 0 -> 100 -> 0 linear oscillation (Triangle Wave)
       const cycleProgress = (elapsed % duration) / duration; // 0.0 to 1.0
       if (cycleProgress < 0.5) {
         this.pressureValue = cycleProgress * 200.0; // 0 to 100
@@ -269,12 +323,7 @@ export class Stage2 {
   }
 
   handleStopAttempt() {
-    if (this.state.failed || this.state.isDialogueActive) return;
-
-    if (!this.state.meterRunning) {
-      this.startCurrentRound();
-      return;
-    }
+    if (this.state.failed || this.state.isRoundResolved || !this.state.meterRunning) return;
 
     this.stopMeterLoop();
     const config = ROUND_CONFIG[this.state.round - 1] || ROUND_CONFIG[0];
@@ -289,12 +338,13 @@ export class Stage2 {
     }
   }
 
-  async handleRoundSuccess() {
+  handleRoundSuccess() {
     this.state.streak++;
-    this.state.isDialogueActive = true;
+    this.state.isRoundResolved = true;
     const currentRound = this.state.round;
+    const config = ROUND_CONFIG[currentRound - 1];
 
-    // Visual Shock & Screen tremor
+    // Visual Shock on Leo
     if (this.dom.sceneContainer) {
       this.dom.sceneContainer.classList.add('shocked');
     }
@@ -304,72 +354,68 @@ export class Stage2 {
 
     // Play secret reveal sting
     audio.playSFX('secret-reveal-sting');
-    this.updateHUD();
 
-    if (currentRound === 1) {
-      // Clue 1: Apartment 69, Gokuldham
-      gameState.addEvidence('apartment-69');
-      this.updateCluesTray();
-
-      await ui.showDialogue([
-        { speaker: 'JAGA', text: "Where were you supposed to meet them?!" },
-        { speaker: 'LEO', text: "Apartment 69! In Gokuldham! That's where they told me to go!" }
-      ]);
-
-      // Reset expression & launch Round 2
-      this.dom.leoImg.src = 'assets/img/stage2_leo_interrogation.png';
-      this.dom.sceneContainer.classList.remove('shocked');
-      this.state.isDialogueActive = false;
-
-      this.state.round = 2;
-      this.startCurrentRound();
-
-    } else if (currentRound === 2) {
-      // Clue 2: Secret Entrance & Handwritten Note
-      gameState.addEvidence('secret-entrance');
+    // Add this round's evidence
+    gameState.addEvidence(config.clueKey);
+    if (currentRound === 2) {
       gameState.addEvidence('handwritten-note');
-      this.updateCluesTray();
-
-      await ui.showDialogue([
-        { speaker: 'JAGA', text: "How did you bypass the security cameras?!" },
-        { speaker: 'LEO', text: "When the power cuts, use the secret basement entrance! There's a handwritten code!" }
-      ]);
-
-      // Reset expression & launch Round 3
-      this.dom.leoImg.src = 'assets/img/stage2_leo_interrogation.png';
-      this.dom.sceneContainer.classList.remove('shocked');
-      this.state.isDialogueActive = false;
-
-      this.state.round = 3;
-      this.startCurrentRound();
-
-    } else if (currentRound === 3) {
-      // Clue 3: Locker Phone
-      gameState.addEvidence('locker-phone');
-      this.updateCluesTray();
-
-      await ui.showDialogue([
-        { speaker: 'JAGA', text: "Who gave the order?!" },
-        { speaker: 'LEO', text: "I swear I never saw their face! Everything was arranged through a burner phone inside the locker!" }
-      ]);
-
-      // Final Stage 2 Wrap up
-      await ui.showDialogue([
-        { speaker: 'VANCE', text: "Apartment 69. Secret entrance. Locker phone. That's our lead." },
-        { speaker: 'JAGA', text: "Let's breach Apartment 69 and recover that phone." }
-      ]);
-
-      gameState.setFlag('stage2Complete', true);
-      audio.playWin();
-
-      setTimeout(() => {
-        gameState.setStage(3);
-      }, 400);
     }
+
+    this.updateHUD();
+    this.updateCluesTray();
+
+    // Show Confession Box
+    if (this.dom.confessionBox) {
+      if (this.dom.confessionStatus) {
+        this.dom.confessionStatus.textContent = `✓ CLUE ${currentRound} / 3 EXTRACTED: ${config.clueName}`;
+      }
+      if (this.dom.confessionText) {
+        this.dom.confessionText.textContent = config.confession;
+      }
+      this.dom.confessionBox.style.display = 'flex';
+    }
+
+    // Switch button to Next Round button
+    if (this.dom.btnStopMeter) {
+      this.dom.btnStopMeter.style.display = 'none';
+    }
+    if (this.dom.btnNextRound) {
+      this.dom.btnNextRound.textContent = config.nextBtnText;
+      this.dom.btnNextRound.style.display = 'block';
+    }
+  }
+
+  handleNextRound() {
+    if (!this.state.isRoundResolved) return;
+    audio.playSFX('ui-click');
+
+    if (this.state.round < 3) {
+      // Advance to next round
+      this.state.round++;
+      this.startCurrentRound();
+    } else {
+      // All 3 rounds complete!
+      this.completeStage2();
+    }
+  }
+
+  completeStage2() {
+    gameState.setFlag('stage2Complete', true);
+    audio.playWin();
+
+    if (this.dom.btnNextRound) {
+      this.dom.btnNextRound.textContent = 'BREACHING APARTMENT 69...';
+      this.dom.btnNextRound.disabled = true;
+    }
+
+    setTimeout(() => {
+      gameState.setStage(3);
+    }, 600);
   }
 
   handleStageFailure() {
     this.state.failed = true;
+    this.state.isRoundResolved = false;
     this.stopMeterLoop();
     audio.playLose();
 
@@ -437,9 +483,10 @@ export class Stage2 {
   cleanup() {
     this.stopMeterLoop();
     this.state.failed = false;
-    this.state.isDialogueActive = false;
+    this.state.isRoundResolved = false;
     if (this.dom.failModal) this.dom.failModal.style.display = 'none';
     if (this.dom.hintToast) this.dom.hintToast.style.display = 'none';
+    if (this.dom.confessionBox) this.dom.confessionBox.style.display = 'none';
   }
 }
 
