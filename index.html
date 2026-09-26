@@ -55,27 +55,113 @@
 
     <!-- STAGE 1: HIT THE SUSPECT -->
     <section id="stage-1" class="stage-section">
-      <div class="stage-hud">
-        <div class="hud-item">
-          <span>TARGET:</span>
-          <span class="hud-value">LEO (FLEEING)</span>
+      <!-- Top Arcade HUD -->
+      <div class="s1-hud">
+        <div class="s1-hud-item">
+          <span class="s1-hud-label">SUSPECT</span>
+          <span class="s1-hud-value">LEO</span>
         </div>
-        <div class="hud-item">
-          <span>HITS REQUIRED:</span>
-          <span class="hud-value" id="s1-hits-counter">0 / 15</span>
+
+        <div class="s1-zone-badges">
+          <div class="s1-badge" id="s1-badge-head">
+            <span class="s1-badge-name">HEAD</span>
+            <div class="s1-pips"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <span class="s1-badge-count">0/3</span>
+          </div>
+          <div class="s1-badge" id="s1-badge-leftEye">
+            <span class="s1-badge-name">L-EYE</span>
+            <div class="s1-pips"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <span class="s1-badge-count">0/3</span>
+          </div>
+          <div class="s1-badge" id="s1-badge-rightEye">
+            <span class="s1-badge-name">R-EYE</span>
+            <div class="s1-pips"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <span class="s1-badge-count">0/3</span>
+          </div>
+          <div class="s1-badge" id="s1-badge-nose">
+            <span class="s1-badge-name">NOSE</span>
+            <div class="s1-pips"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <span class="s1-badge-count">0/3</span>
+          </div>
+          <div class="s1-badge" id="s1-badge-mouthChin">
+            <span class="s1-badge-name">CHIN</span>
+            <div class="s1-pips"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <span class="s1-badge-count">0/3</span>
+          </div>
         </div>
-        <div class="hud-item">
-          <span>TIME:</span>
-          <span class="hud-value" id="s1-timer">20s</span>
+
+        <div class="s1-hud-item">
+          <span class="s1-hud-label">TOTAL HITS</span>
+          <span class="s1-hud-value" id="s1-hits-display">0<span class="s1-hud-sub">/15</span></span>
+          <div class="s1-progress-bar-wrap">
+            <div class="s1-progress-bar-fill" id="s1-hits-progress"></div>
+          </div>
+        </div>
+
+        <div class="s1-hud-item s1-timer-box" id="s1-timer-box">
+          <span class="s1-hud-label">TIME</span>
+          <span class="s1-hud-value" id="s1-timer-display">20</span>
         </div>
       </div>
 
-      <div class="target-arena" id="s1-arena">
-        <div class="paper-card" style="text-align: center;">
-          <h3 style="font-family: var(--font-typewriter); margin-bottom: 8px;">[ STAGE 1: TARGET INTERCEPTION ]</h3>
-          <p style="font-size: 14px; color: var(--ink-muted); margin-bottom: 16px;">Fast reflex target interaction scene skeleton.</p>
-          <button id="btn-s1-complete" class="btn-primary">SUBDUE SUSPECT (TEST PASS)</button>
+      <!-- Arena Background and Character Viewport -->
+      <div class="s1-arena-view" id="s1-arena-view">
+        <div class="s1-bg-layer"></div>
+
+        <div class="s1-character-mover" id="s1-character-mover">
+          <div class="s1-character-stage" id="s1-character-stage">
+            <img src="assets/img/leo1.png" alt="Leo" id="s1-character-img" class="s1-character-img" draggable="false">
+            <div class="s1-impact-flash" id="s1-impact-flash"></div>
+            
+            <!-- 5 Interactive Face Hitboxes -->
+            <div class="s1-hitboxes-layer" id="s1-hitboxes-layer">
+              <div class="s1-face-hitbox" id="s1-hitbox-head" data-zone="head">
+                <div class="s1-sub-target"><span class="s1-target-dot"></span></div>
+              </div>
+              <div class="s1-face-hitbox" id="s1-hitbox-leftEye" data-zone="leftEye">
+                <div class="s1-sub-target"><span class="s1-target-dot"></span></div>
+              </div>
+              <div class="s1-face-hitbox" id="s1-hitbox-rightEye" data-zone="rightEye">
+                <div class="s1-sub-target"><span class="s1-target-dot"></span></div>
+              </div>
+              <div class="s1-face-hitbox" id="s1-hitbox-nose" data-zone="nose">
+                <div class="s1-sub-target"><span class="s1-target-dot"></span></div>
+              </div>
+              <div class="s1-face-hitbox" id="s1-hitbox-mouthChin" data-zone="mouthChin">
+                <div class="s1-sub-target"><span class="s1-target-dot"></span></div>
+              </div>
+            </div>
+
+            <!-- Comic FX layer (POW, BAM, sparks) -->
+            <div class="s1-fx-layer" id="s1-fx-layer"></div>
+          </div>
         </div>
+
+        <!-- Pre-Stage Rules / Briefing Modal -->
+        <div class="s1-modal-overlay" id="s1-briefing-modal">
+          <div class="paper-card s1-briefing-card">
+            <span class="classified-stamp">URGENT APPREHENSION</span>
+            <h2 style="font-family: var(--font-typewriter); margin-bottom: 8px;">INTERCEPT THE SUSPECT</h2>
+            <img src="assets/img/rules.png" alt="Rules" class="s1-rules-preview" style="width: 100%; max-height: 220px; object-fit: contain; border: 2px solid var(--border-dark); margin: 10px 0;">
+            <p style="font-size: 14px; color: var(--ink-muted); margin-bottom: 16px;">
+              Leo was spotted escaping the laboratory perimeter. Strike <strong>5 facial points 3 times each</strong> (15 total strikes) in <strong>20 seconds</strong> before he escapes!
+            </p>
+            <button id="btn-s1-start-action" class="btn-primary">PURSUE SUSPECT ▶</button>
+          </div>
+        </div>
+
+        <!-- Stage 1 Fail Modal -->
+        <div class="s1-modal-overlay" id="s1-fail-modal" style="display: none;">
+          <div class="paper-card s1-fail-card">
+            <span class="classified-stamp">SUSPECT ESCAPED</span>
+            <h2 style="font-family: var(--font-typewriter); color: var(--accent-red); margin-bottom: 8px;">TIME EXPIRED</h2>
+            <p style="font-size: 15px; color: var(--ink-muted); margin-bottom: 16px;">
+              Leo broke through the perimeter fence. Hits landed: <strong id="s1-fail-hits">0 / 15</strong>.
+            </p>
+            <button id="btn-s1-retry" class="btn-primary">RETRY INTERCEPTION ↺</button>
+          </div>
+        </div>
+
       </div>
     </section>
 
