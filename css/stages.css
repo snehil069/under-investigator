@@ -1116,6 +1116,90 @@
   position: relative;
 }
 
+/* Big Center Hit Success Popup */
+.s2-hit-popup-overlay {
+  animation: s2-fade-in 0.2s ease-out;
+}
+
+@keyframes s2-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.s2-hit-popup-card {
+  background: var(--bg-paper);
+  border: 3px solid #2e7d32;
+  box-shadow: 0 0 35px rgba(46, 125, 50, 0.7), var(--shadow-hard);
+  animation: s2-pop-scale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px;
+}
+
+@keyframes s2-pop-scale {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.s2-success-stamp {
+  position: static !important;
+  color: #2e7d32 !important;
+  border-color: #2e7d32 !important;
+  font-size: 16px !important;
+  transform: rotate(0deg) !important;
+  margin-bottom: 2px;
+}
+
+.s2-popup-header {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: #1b5e20;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.s2-popup-clue-badge {
+  font-family: var(--font-typewriter);
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  background: rgba(46, 125, 50, 0.15);
+  border: 1.5px solid #2e7d32;
+  color: #1b5e20;
+  padding: 4px 12px;
+  border-radius: 3px;
+}
+
+.s2-popup-quote {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--ink-primary);
+  margin: 6px 0 14px 0;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 10px 14px;
+  border-left: 3px solid #2e7d32;
+  text-align: left;
+  width: 100%;
+}
+
+.s2-popup-next-btn {
+  background: #2e7d32 !important;
+  border-color: #1b5e20 !important;
+  font-size: 15px !important;
+  padding: 12px 28px !important;
+  width: 100%;
+  max-width: 320px;
+}
+
+.s2-popup-next-btn:hover {
+  background: #388e3c !important;
+}
+
 .s2-fail-card {
   border-color: var(--accent-red);
   box-shadow: 0 0 30px rgba(179, 38, 30, 0.6);

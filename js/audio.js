@@ -84,6 +84,10 @@ class AudioManager {
     this.playSFX('win');
   }
 
+  playAchievementBell() {
+    this.playSFX('achievement-bell');
+  }
+
   playLose() {
     this.playSFX('lose');
   }

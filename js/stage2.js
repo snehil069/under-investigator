@@ -4,7 +4,8 @@
  * Round 1: Target 43.0 — 57.0 -> Clue 1 (Apartment 69)
  * Round 2: Target 46.0 — 54.0 -> Clue 2 (Secret Entrance & Note)
  * Round 3: Target 48.0 — 52.0 -> Clue 3 (Locker Phone)
- * STRICT RULE: ONE MISS = COMPLETE STAGE 2 RESET.
+ * STRICT RULE: ONE MISS = COMPLETE STAGE 2 RESET ("fuhh" SFX).
+ * SUCCESS: Center Hit Popup + Achievement Bell SFX.
  */
 
 import { gameState } from './state.js';
@@ -20,7 +21,7 @@ const ROUND_CONFIG = [
     displayText: "43.0 — 57.0",
     wedgeHalfAngle: 18.2,
     clueKey: 'apartment-69',
-    clueName: 'APARTMENT 69',
+    clueName: 'APARTMENT 69 (GOKULDHAM)',
     confession: '"Apartment 69! In Gokuldham! That\'s where they told me to go!"',
     nextBtnText: 'EXTRACT 2ND CLUE (ROUND 2) ▶'
   },
@@ -32,7 +33,7 @@ const ROUND_CONFIG = [
     displayText: "46.0 — 54.0",
     wedgeHalfAngle: 10.4,
     clueKey: 'secret-entrance',
-    clueName: 'SECRET ENTRANCE',
+    clueName: 'SECRET ENTRANCE & NOTE',
     confession: '"When the power cuts, use the secret basement entrance! There\'s a handwritten code!"',
     nextBtnText: 'EXTRACT FINAL CLUE (ROUND 3) ▶'
   },
@@ -44,7 +45,7 @@ const ROUND_CONFIG = [
     displayText: "48.0 — 52.0",
     wedgeHalfAngle: 5.2,
     clueKey: 'locker-phone',
-    clueName: 'LOCKER PHONE',
+    clueName: 'LOCKER BURNER PHONE',
     confession: '"I swear I never saw their face! Everything was arranged through a burner phone inside the locker!"',
     nextBtnText: 'PROCEED TO APARTMENT 69 ▶'
   }
@@ -102,6 +103,15 @@ export class Stage2 {
       slot1: document.getElementById('s2-slot-1'),
       slot2: document.getElementById('s2-slot-2'),
       slot3: document.getElementById('s2-slot-3'),
+      
+      // Center Hit Success Popup
+      hitPopupOverlay: document.getElementById('s2-hit-popup-overlay'),
+      popupRound: document.getElementById('s2-popup-round'),
+      popupClueBadge: document.getElementById('s2-popup-clue-badge'),
+      popupQuote: document.getElementById('s2-popup-quote'),
+      btnPopupNext: document.getElementById('btn-s2-popup-next'),
+
+      // Failure Modal
       failModal: document.getElementById('s2-fail-modal'),
       failStoppedVal: document.getElementById('s2-fail-stopped-val'),
       btnRetry: document.getElementById('btn-s2-retry')
@@ -116,7 +126,15 @@ export class Stage2 {
       });
     }
 
-    // Attach Next Round Button
+    // Attach Next Round Buttons (Both in popup and bottom deck)
+    if (this.dom.btnPopupNext) {
+      this.dom.btnPopupNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        this.handleNextRound();
+      });
+    }
+
     if (this.dom.btnNextRound) {
       this.dom.btnNextRound.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -162,6 +180,9 @@ export class Stage2 {
     if (this.dom.failModal) {
       this.dom.failModal.style.display = 'none';
     }
+    if (this.dom.hitPopupOverlay) {
+      this.dom.hitPopupOverlay.style.display = 'none';
+    }
 
     // Reset and start Round 1
     this.fullStageReset(true);
@@ -171,6 +192,9 @@ export class Stage2 {
     audio.playClick();
     if (this.dom.failModal) {
       this.dom.failModal.style.display = 'none';
+    }
+    if (this.dom.hitPopupOverlay) {
+      this.dom.hitPopupOverlay.style.display = 'none';
     }
     this.fullStageReset(true);
   }
@@ -199,6 +223,9 @@ export class Stage2 {
     }
     if (this.dom.confessionBox) {
       this.dom.confessionBox.style.display = 'none';
+    }
+    if (this.dom.hitPopupOverlay) {
+      this.dom.hitPopupOverlay.style.display = 'none';
     }
     if (this.dom.btnNextRound) {
       this.dom.btnNextRound.style.display = 'none';
@@ -262,9 +289,12 @@ export class Stage2 {
     this.state.failed = false;
     this.state.isRoundResolved = false;
 
-    // Visual buttons reset
+    // Visual resets
     if (this.dom.confessionBox) {
       this.dom.confessionBox.style.display = 'none';
+    }
+    if (this.dom.hitPopupOverlay) {
+      this.dom.hitPopupOverlay.style.display = 'none';
     }
     if (this.dom.btnNextRound) {
       this.dom.btnNextRound.style.display = 'none';
@@ -377,7 +407,7 @@ export class Stage2 {
       this.dom.leoImg.src = 'assets/img/stage2_leo_shocked.png';
     }
 
-    // Return Leo back to normal interrogation posture after short 750ms reaction
+    // Return Leo back to normal interrogation posture after 750ms reaction
     setTimeout(() => {
       if (this.dom.leoImg && !this.state.failed) {
         this.dom.leoImg.src = 'assets/img/stage2_leo_interrogation.png';
@@ -387,8 +417,8 @@ export class Stage2 {
       }
     }, 750);
 
-    // Play secret reveal sting
-    audio.playSFX('secret-reveal-sting');
+    // Play Achievement Bell SFX
+    audio.playAchievementBell();
 
     // Add this round's evidence
     gameState.addEvidence(config.clueKey);
@@ -399,7 +429,24 @@ export class Stage2 {
     this.updateHUD();
     this.updateCluesTray();
 
-    // Show Confession Box
+    // 1. Show Big Center Hit Success Popup
+    if (this.dom.hitPopupOverlay) {
+      if (this.dom.popupRound) {
+        this.dom.popupRound.textContent = `STRIKE ${currentRound} / 3 SUCCESSFUL`;
+      }
+      if (this.dom.popupClueBadge) {
+        this.dom.popupClueBadge.textContent = `CLUE ${currentRound}: ${config.clueName}`;
+      }
+      if (this.dom.popupQuote) {
+        this.dom.popupQuote.textContent = config.confession;
+      }
+      if (this.dom.btnPopupNext) {
+        this.dom.btnPopupNext.textContent = config.nextBtnText;
+      }
+      this.dom.hitPopupOverlay.style.display = 'flex';
+    }
+
+    // 2. Also populate in-chamber deck confession box
     if (this.dom.confessionBox) {
       if (this.dom.confessionStatus) {
         this.dom.confessionStatus.textContent = `✓ CLUE ${currentRound} / 3 EXTRACTED: ${config.clueName}`;
@@ -410,7 +457,7 @@ export class Stage2 {
       this.dom.confessionBox.style.display = 'flex';
     }
 
-    // Switch button to Next Round button
+    // Switch deck button to Next Round
     if (this.dom.btnStopMeter) {
       this.dom.btnStopMeter.style.display = 'none';
     }
@@ -423,6 +470,10 @@ export class Stage2 {
   handleNextRound() {
     if (!this.state.isRoundResolved) return;
     audio.playClick();
+
+    if (this.dom.hitPopupOverlay) {
+      this.dom.hitPopupOverlay.style.display = 'none';
+    }
 
     if (this.state.round < 3) {
       // Advance to next round
@@ -442,6 +493,10 @@ export class Stage2 {
       this.dom.btnNextRound.textContent = 'BREACHING APARTMENT 69...';
       this.dom.btnNextRound.disabled = true;
     }
+    if (this.dom.btnPopupNext) {
+      this.dom.btnPopupNext.textContent = 'BREACHING APARTMENT 69...';
+      this.dom.btnPopupNext.disabled = true;
+    }
 
     setTimeout(() => {
       gameState.setStage(3);
@@ -452,7 +507,13 @@ export class Stage2 {
     this.state.failed = true;
     this.state.isRoundResolved = false;
     this.stopMeterLoop();
+    
+    // Play "fuhh" lose sound effect
     audio.playLose();
+
+    if (this.dom.hitPopupOverlay) {
+      this.dom.hitPopupOverlay.style.display = 'none';
+    }
 
     if (this.dom.failStoppedVal) {
       this.dom.failStoppedVal.textContent = this.pressureValue.toFixed(1);
@@ -508,7 +569,7 @@ export class Stage2 {
     this.dom.hintToast.textContent = `💡 HINT: ${message}`;
     this.dom.hintToast.style.display = 'block';
 
-    audio.playSFX('paper-rustle');
+    audio.playClick();
 
     setTimeout(() => {
       if (this.dom.hintToast) this.dom.hintToast.style.display = 'none';
@@ -520,6 +581,7 @@ export class Stage2 {
     this.state.failed = false;
     this.state.isRoundResolved = false;
     if (this.dom.failModal) this.dom.failModal.style.display = 'none';
+    if (this.dom.hitPopupOverlay) this.dom.hitPopupOverlay.style.display = 'none';
     if (this.dom.hintToast) this.dom.hintToast.style.display = 'none';
     if (this.dom.confessionBox) this.dom.confessionBox.style.display = 'none';
   }
