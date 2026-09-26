@@ -1,6 +1,6 @@
 /**
  * UNDER INVESTIGATION — Stage 2: Break the Silence (stage2.js)
- * Circular dial gauge & linear track oscillating 0 -> 100 -> 0 repeatedly.
+ * High-speed 0 -> 100 -> 0 continuous oscillation with immediate activation.
  * Target ranges: Round 1 (43 to 57), Round 2 (46 to 54), Round 3 (48 to 52).
  * STRICT RULE: ONE MISS = COMPLETE STAGE 2 RESET.
  */
@@ -81,8 +81,6 @@ export class Stage2 {
       slot1: document.getElementById('s2-slot-1'),
       slot2: document.getElementById('s2-slot-2'),
       slot3: document.getElementById('s2-slot-3'),
-      briefingModal: document.getElementById('s2-briefing-modal'),
-      btnStartInterrogation: document.getElementById('btn-s2-start-interrogation'),
       failModal: document.getElementById('s2-fail-modal'),
       failStoppedVal: document.getElementById('s2-fail-stopped-val'),
       btnRetry: document.getElementById('btn-s2-retry')
@@ -106,15 +104,6 @@ export class Stage2 {
       }
     });
 
-    // Attach Start Interrogation Button
-    if (this.dom.btnStartInterrogation) {
-      this.dom.btnStartInterrogation.addEventListener('click', () => {
-        audio.playSFX('ui-click');
-        if (this.dom.briefingModal) this.dom.briefingModal.style.display = 'none';
-        this.startCurrentRound();
-      });
-    }
-
     // Attach Retry Button on Failure
     if (this.dom.btnRetry) {
       this.dom.btnRetry.addEventListener('click', () => {
@@ -134,6 +123,10 @@ export class Stage2 {
     console.log('[Stage 2] Started: Break the Silence');
     audio.playAmbience('stage2_bg');
 
+    if (this.dom.failModal) {
+      this.dom.failModal.style.display = 'none';
+    }
+
     // Run opening dialogue sequence first
     await ui.showDialogue([
       { speaker: 'VANCE', text: "Let's hear the rest." },
@@ -141,15 +134,8 @@ export class Stage2 {
       { speaker: 'VANCE', text: "With the truth." }
     ]);
 
-    // Show Briefing Objective Modal
-    if (this.dom.briefingModal) {
-      this.dom.briefingModal.style.display = 'flex';
-    }
-    if (this.dom.failModal) {
-      this.dom.failModal.style.display = 'none';
-    }
-
-    this.fullStageReset(false);
+    // Start Round 1 immediately!
+    this.fullStageReset(true);
   }
 
   fullStageReset(autoStart = true) {
@@ -213,6 +199,7 @@ export class Stage2 {
 
   runMeterLoop() {
     this.stopMeterLoop();
+    this.state.meterRunning = true;
 
     const config = ROUND_CONFIG[this.state.round - 1] || ROUND_CONFIG[0];
 
@@ -222,28 +209,27 @@ export class Stage2 {
       const elapsed = timestamp - this.startTime;
       
       // Continuous sine sweep oscillating smoothly 0 to 100 to 0 repeatedly
-      // sin oscillates from -1 to +1 -> mapped to 0 to 100
       const sineWave = (Math.sin(elapsed * config.speed) + 1) / 2; // 0.0 to 1.0
       this.pressureValue = sineWave * 100; // 0.0 to 100.0
 
-      // Update digital readout
+      // Update digital readout directly
       if (this.dom.pressureValDisplay) {
         this.dom.pressureValDisplay.textContent = this.pressureValue.toFixed(1);
       }
 
-      // Update linear track pointer
+      // Update linear track pointer directly
       if (this.dom.meterPointer) {
-        this.dom.meterPointer.style.setProperty('--pointer-pos', `${this.pressureValue}%`);
+        this.dom.meterPointer.style.left = `${this.pressureValue}%`;
       }
 
-      // Update circular dial needle rotation (-130deg for 0 to +130deg for 100)
+      // Update circular dial needle rotation directly (-130deg for 0 to +130deg for 100)
       const dialRot = -130 + (this.pressureValue / 100) * 260;
       if (this.dom.dialNeedleWrap) {
-        this.dom.dialNeedleWrap.style.setProperty('--dial-rot', `${dialRot}deg`);
+        this.dom.dialNeedleWrap.style.transform = `rotate(${dialRot}deg)`;
       }
 
       // Periodic meter ticking SFX
-      if (timestamp - this.lastTickTime > 260) {
+      if (timestamp - this.lastTickTime > 180) {
         this.lastTickTime = timestamp;
         audio.playSFX('meter-swing-tick');
       }
@@ -426,7 +412,6 @@ export class Stage2 {
 
   cleanup() {
     this.stopMeterLoop();
-    if (this.dom.briefingModal) this.dom.briefingModal.style.display = 'none';
     if (this.dom.failModal) this.dom.failModal.style.display = 'none';
     if (this.dom.hintToast) this.dom.hintToast.style.display = 'none';
   }
