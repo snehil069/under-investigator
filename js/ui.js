@@ -113,12 +113,13 @@ class UIManager {
     if (currentLine.voice) {
       audio.playVoice(currentLine.voice);
     } else {
-      audio.playSFX('paper-rustle');
+      audio.playNext();
     }
   }
 
   advanceDialogue() {
     if (!this.isDialoguePlaying) return;
+    audio.playNext();
     this.processNextDialogueLine();
   }
 
@@ -137,6 +138,7 @@ class UIManager {
 
   toggleEvidenceDrawer() {
     if (this.evidenceDrawer) {
+      audio.playClick();
       this.evidenceDrawer.classList.toggle('open');
       this.renderEvidenceList();
     }
@@ -144,6 +146,7 @@ class UIManager {
 
   closeEvidenceDrawer() {
     if (this.evidenceDrawer) {
+      audio.playClick();
       this.evidenceDrawer.classList.remove('open');
     }
   }

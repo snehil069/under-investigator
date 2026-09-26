@@ -68,7 +68,7 @@ export class Stage1 {
     // Attach Briefing Start Button
     if (this.dom.btnStartAction) {
       this.dom.btnStartAction.addEventListener('click', () => {
-        audio.playSFX('ui-click');
+        audio.playClick();
         this.dom.briefingModal.style.display = 'none';
         this.startArcadeAction();
       });
@@ -77,7 +77,7 @@ export class Stage1 {
     // Attach Retry Button
     if (this.dom.btnRetry) {
       this.dom.btnRetry.addEventListener('click', () => {
-        audio.playSFX('ui-click');
+        audio.playClick();
         this.dom.failModal.style.display = 'none';
         this.startArcadeAction();
       });

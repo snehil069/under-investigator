@@ -168,7 +168,7 @@ export class Stage2 {
   }
 
   retryStage() {
-    audio.playSFX('ui-click');
+    audio.playClick();
     if (this.dom.failModal) {
       this.dom.failModal.style.display = 'none';
     }
@@ -422,7 +422,7 @@ export class Stage2 {
 
   handleNextRound() {
     if (!this.state.isRoundResolved) return;
-    audio.playSFX('ui-click');
+    audio.playClick();
 
     if (this.state.round < 3) {
       // Advance to next round

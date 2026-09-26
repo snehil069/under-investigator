@@ -72,6 +72,14 @@ class AudioManager {
     this.playSFX(chosenSound);
   }
 
+  playClick() {
+    this.playSFX('click');
+  }
+
+  playNext() {
+    this.playSFX('next');
+  }
+
   playWin() {
     this.playSFX('win');
   }

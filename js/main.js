@@ -36,7 +36,7 @@ class GameRouter {
     const startBtn = document.getElementById('btn-start-game');
     if (startBtn) {
       startBtn.addEventListener('click', () => {
-        audio.playSFX('ui-click');
+        audio.playClick();
         gameState.setStage(1);
       });
     }
