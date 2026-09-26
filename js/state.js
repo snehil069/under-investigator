@@ -3,18 +3,39 @@
  */
 
 export const EvidenceRegistry = {
-  NOTE_APARTMENT: {
-    id: 'note_apartment',
-    name: 'Meeting Point Note',
-    category: 'Document',
-    desc: 'Instructions pointing to Apartment 69, Gokuldham: "When the power supply cuts, go inside from the secret entrance."',
+  'apartment-69': {
+    id: 'apartment-69',
+    name: 'Apartment 69 — Gokuldham',
+    category: 'Location',
+    desc: 'Meeting point specified by the mastermind: Apartment 69, Gokuldham.',
     foundIn: 'stage2'
   },
-  LOCKER_PHONE_INFO: {
-    id: 'locker_phone_info',
-    name: 'Secret Locker Instruction',
-    category: 'Testimony',
-    desc: 'Leo was told to contact the mastermind through a phone hidden inside a locker.',
+  'secret-entrance': {
+    id: 'secret-entrance',
+    name: 'Secret Entrance Protocol',
+    category: 'Intel',
+    desc: 'Instructions to enter the laboratory from the secret entrance when the power is cut.',
+    foundIn: 'stage2'
+  },
+  'handwritten-note': {
+    id: 'handwritten-note',
+    name: 'Handwritten Note',
+    category: 'Document',
+    desc: 'Written note: "When the power supply cuts, go inside from the secret entrance."',
+    foundIn: 'stage2'
+  },
+  'locker-phone': {
+    id: 'locker-phone',
+    name: 'Locker Phone Clue',
+    category: 'Intel',
+    desc: 'Leo was instructed to communicate via a burner phone hidden inside a locker in Apartment 69.',
+    foundIn: 'stage2'
+  },
+  NOTE_APARTMENT: {
+    id: 'apartment-69',
+    name: 'Apartment 69 — Gokuldham',
+    category: 'Location',
+    desc: 'Meeting point specified by the mastermind: Apartment 69, Gokuldham.',
     foundIn: 'stage2'
   },
   LOCKER_PIN: {
@@ -87,6 +108,22 @@ export class GameStateMachine {
       return true;
     }
     return false;
+  }
+
+  removeEvidence(id) {
+    const idx = this.evidence.findIndex(e => e.id === id);
+    if (idx !== -1) {
+      const removed = this.evidence.splice(idx, 1)[0];
+      this.notify('evidence_removed', removed);
+      return true;
+    }
+    return false;
+  }
+
+  removeStage2Evidence() {
+    const stage2Ids = ['apartment-69', 'secret-entrance', 'handwritten-note', 'locker-phone'];
+    this.evidence = this.evidence.filter(e => !stage2Ids.includes(e.id));
+    this.notify('stage2_evidence_cleared', null);
   }
 
   hasEvidence(id) {
