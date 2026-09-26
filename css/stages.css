@@ -255,8 +255,9 @@
 /* Character Stage & Image calibrated to Leo portrait */
 .s1-character-stage {
   position: relative;
-  width: 90vw;
-  max-width: 800px;
+  height: clamp(340px, 62vh, 580px);
+  width: auto;
+  max-width: 90vw;
   aspect-ratio: 1144 / 800;
   display: flex;
   justify-content: center;
@@ -311,7 +312,7 @@
   opacity: 0.85;
 }
 
-/* 5 Hitboxes calibrated precisely to Leo's facial features on image */
+/* 5 Hitboxes calibrated mathematically to Leo's facial symmetry center (X=44.2%) */
 .s1-hitboxes-layer {
   position: absolute;
   inset: 0;
@@ -323,51 +324,54 @@
   position: absolute;
   cursor: crosshair;
   background: rgba(255, 120, 0, 0.08);
-  border: 1.5px dashed rgba(255, 180, 0, 0.5);
+  border: 1.5px dashed rgba(255, 180, 0, 0.6);
   border-radius: 50%;
   z-index: 30;
   transition: all 0.15s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* 1. HEAD / FOREHEAD (Top center of Leo's face) */
+/* 1. HEAD / FOREHEAD (Center: X=44.2%, Y=24.0%) */
 #s1-hitbox-head {
-  left: 41%;
-  top: 18%;
-  width: 18%;
+  left: 36.2%;
+  top: 15.5%;
+  width: 16%;
   height: 16%;
   border-radius: 40px;
 }
 
-/* 2. LEFT EYE (Viewer's Left - Leo's Right Eye) */
+/* 2. LEFT EYE (Viewer's Left - Center: X=37.6%, Y=46.0%) */
 #s1-hitbox-leftEye {
-  left: 35.5%;
-  top: 38%;
-  width: 12%;
-  height: 12%;
+  left: 32.5%;
+  top: 40.5%;
+  width: 10.2%;
+  height: 11.2%;
 }
 
-/* 3. RIGHT EYE (Viewer's Right - Leo's Left Eye) */
+/* 3. RIGHT EYE (Viewer's Right - Center: X=50.9%, Y=46.0%) */
 #s1-hitbox-rightEye {
-  left: 52%;
-  top: 38%;
-  width: 12%;
-  height: 12%;
+  left: 45.8%;
+  top: 40.5%;
+  width: 10.2%;
+  height: 11.2%;
 }
 
-/* 4. NOSE (Center nose bulb) */
+/* 4. NOSE (Center: X=44.2%, Y=54.5%) */
 #s1-hitbox-nose {
-  left: 44.5%;
+  left: 39.5%;
   top: 49%;
-  width: 11%;
-  height: 12%;
+  width: 9.4%;
+  height: 11.5%;
 }
 
-/* 5. MOUTH & CHIN (Grinning teeth and jaw) */
+/* 5. MOUTH & CHIN (Center: X=44.2%, Y=68.5%) */
 #s1-hitbox-mouthChin {
-  left: 38%;
-  top: 61%;
-  width: 24%;
-  height: 19%;
+  left: 33.7%;
+  top: 60.5%;
+  width: 21%;
+  height: 18.5%;
   border-radius: 24px;
 }
 
@@ -376,6 +380,37 @@
   pointer-events: none;
   background: transparent;
   border-color: transparent;
+}
+
+/* Target Labels */
+.s1-hit-label {
+  position: absolute;
+  top: -18px;
+  font-family: var(--font-typewriter);
+  font-size: 9px;
+  font-weight: bold;
+  color: #ffeb3b;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid #ff9800;
+  padding: 1px 5px;
+  border-radius: 2px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.s1-face-hitbox:hover .s1-hit-label {
+  opacity: 1;
+  transform: scale(1.1);
+  background: #d32f2f;
+  color: #fff;
+  border-color: #fff;
+}
+
+.s1-face-hitbox.completed .s1-hit-label {
+  display: none;
 }
 
 /* Target Crosshairs on Hitboxes */
@@ -405,8 +440,9 @@
 }
 
 .s1-face-hitbox:hover {
-  background: rgba(255, 60, 0, 0.22);
+  background: rgba(255, 60, 0, 0.25);
   border: 2px solid #ff3300;
+  box-shadow: 0 0 14px rgba(255, 60, 0, 0.7);
 }
 
 .s1-face-hitbox:hover .s1-sub-target {
