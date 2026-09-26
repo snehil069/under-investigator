@@ -65,7 +65,7 @@ export class Stage2 {
       streak: 0,
       hintLevel: 0,
       meterRunning: false,
-      isRoundResolved: false, // True between stopping and clicking Next Round
+      isRoundResolved: false,
       failed: false
     };
 
@@ -207,7 +207,18 @@ export class Stage2 {
       this.dom.btnStopMeter.style.display = 'block';
     }
 
+    // Reset needle and values explicitly to zero
     this.pressureValue = 0;
+    if (this.dom.pressureValDisplay) {
+      this.dom.pressureValDisplay.textContent = '0.0';
+    }
+    if (this.dom.meterPointer) {
+      this.dom.meterPointer.style.left = '0%';
+    }
+    if (this.dom.dialNeedleWrap) {
+      this.dom.dialNeedleWrap.style.transform = 'rotate(-130deg)';
+    }
+
     this.updateHUD();
     this.updateCluesTray();
     this.applyRoundConfig(1);
@@ -261,11 +272,25 @@ export class Stage2 {
     if (this.dom.btnStopMeter) {
       this.dom.btnStopMeter.style.display = 'block';
     }
+    
+    // Ensure Leo is in normal posture
     if (this.dom.leoImg) {
       this.dom.leoImg.src = 'assets/img/stage2_leo_interrogation.png';
     }
     if (this.dom.sceneContainer) {
       this.dom.sceneContainer.classList.remove('shocked');
+    }
+
+    // Reset needle and values cleanly to 0
+    this.pressureValue = 0;
+    if (this.dom.pressureValDisplay) {
+      this.dom.pressureValDisplay.textContent = '0.0';
+    }
+    if (this.dom.meterPointer) {
+      this.dom.meterPointer.style.left = '0%';
+    }
+    if (this.dom.dialNeedleWrap) {
+      this.dom.dialNeedleWrap.style.transform = 'rotate(-130deg)';
     }
 
     this.startTime = performance.now();
@@ -344,13 +369,23 @@ export class Stage2 {
     const currentRound = this.state.round;
     const config = ROUND_CONFIG[currentRound - 1];
 
-    // Visual Shock on Leo
+    // Visual Shock on Leo upon hit
     if (this.dom.sceneContainer) {
       this.dom.sceneContainer.classList.add('shocked');
     }
     if (this.dom.leoImg) {
       this.dom.leoImg.src = 'assets/img/stage2_leo_shocked.png';
     }
+
+    // Return Leo back to normal interrogation posture after short 750ms reaction
+    setTimeout(() => {
+      if (this.dom.leoImg && !this.state.failed) {
+        this.dom.leoImg.src = 'assets/img/stage2_leo_interrogation.png';
+      }
+      if (this.dom.sceneContainer) {
+        this.dom.sceneContainer.classList.remove('shocked');
+      }
+    }, 750);
 
     // Play secret reveal sting
     audio.playSFX('secret-reveal-sting');
