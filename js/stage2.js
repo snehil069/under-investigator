@@ -14,21 +14,21 @@ const ROUND_CONFIG = [
     round: 1,
     minVal: 43.0,
     maxVal: 57.0,
-    speed: 0.0028, // Sweep speed
+    speed: 0.0055, // Fast & lively sweep
     displayText: "43 — 57"
   },
   {
     round: 2,
     minVal: 46.0,
     maxVal: 54.0,
-    speed: 0.0038, // Faster
+    speed: 0.0075, // Faster
     displayText: "46 — 54"
   },
   {
     round: 3,
     minVal: 48.0,
     maxVal: 52.0,
-    speed: 0.0048, // Fastest & tightest
+    speed: 0.0098, // Intense & fastest
     displayText: "48 — 52"
   }
 ];
