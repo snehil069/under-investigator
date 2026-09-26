@@ -1,6 +1,8 @@
 /**
  * UNDER INVESTIGATION — Stage 2: Break the Silence (stage2.js)
- * Strict 3-consecutive meter mechanic with progressive shrinking & full stage reset on miss.
+ * Circular dial gauge & linear track oscillating 0 -> 100 -> 0 repeatedly.
+ * Target ranges: Round 1 (43 to 57), Round 2 (46 to 54), Round 3 (48 to 52).
+ * STRICT RULE: ONE MISS = COMPLETE STAGE 2 RESET.
  */
 
 import { gameState } from './state.js';
@@ -10,28 +12,31 @@ import { audio } from './audio.js';
 const ROUND_CONFIG = [
   {
     round: 1,
-    speed: 0.0032,        // Sweep speed
-    successZoneSize: 24,  // 24% width (Large)
-    zoneLeft: 38          // Centered 38% -> 62%
+    minVal: 43.0,
+    maxVal: 57.0,
+    speed: 0.0028, // Sweep speed
+    displayText: "43 — 57"
   },
   {
     round: 2,
-    speed: 0.0044,        // Faster
-    successZoneSize: 16,  // 16% width (Medium)
-    zoneLeft: 42          // 42% -> 58%
+    minVal: 46.0,
+    maxVal: 54.0,
+    speed: 0.0038, // Faster
+    displayText: "46 — 54"
   },
   {
     round: 3,
-    speed: 0.0058,        // Fastest
-    successZoneSize: 9.5, // 9.5% width (Tight, high stakes, fair)
-    zoneLeft: 45.25       // 45.25% -> 54.75%
+    minVal: 48.0,
+    maxVal: 52.0,
+    speed: 0.0048, // Fastest & tightest
+    displayText: "48 — 52"
   }
 ];
 
 const HINT_MESSAGES = [
-  "WATCH THE NEEDLE.",
-  "THE RED ZONE IS THE SAFE ZONE.",
-  "STOP WHEN THE POINTER ENTERS THE RED ZONE."
+  "WATCH THE NEEDLE ROTATE 0 TO 100.",
+  "THE RED ZONE IS THE SAFE ZONE AROUND 50.",
+  "STOP WHEN THE PRESSURE VALUE IS INSIDE THE TARGET RANGE."
 ];
 
 export class Stage2 {
@@ -47,7 +52,7 @@ export class Stage2 {
       failed: false
     };
 
-    this.pointerPos = 0; // 0 to 100%
+    this.pressureValue = 0; // 0 to 100
     this.animFrameId = null;
     this.startTime = 0;
     this.lastTickTime = 0;
@@ -64,7 +69,9 @@ export class Stage2 {
       pip3: document.getElementById('s2-pip-3'),
       sceneContainer: document.getElementById('s2-scene-container'),
       leoImg: document.getElementById('s2-leo-img'),
-      dialNeedle: document.getElementById('s2-dial-needle'),
+      dialNeedleWrap: document.getElementById('s2-dial-needle-wrap'),
+      pressureValDisplay: document.getElementById('s2-pressure-val'),
+      targetRangeDisplay: document.getElementById('s2-target-range-text'),
       meterTrack: document.getElementById('s2-meter-track'),
       successZone: document.getElementById('s2-success-zone'),
       meterPointer: document.getElementById('s2-meter-pointer'),
@@ -77,6 +84,7 @@ export class Stage2 {
       briefingModal: document.getElementById('s2-briefing-modal'),
       btnStartInterrogation: document.getElementById('btn-s2-start-interrogation'),
       failModal: document.getElementById('s2-fail-modal'),
+      failStoppedVal: document.getElementById('s2-fail-stopped-val'),
       btnRetry: document.getElementById('btn-s2-retry')
     };
 
@@ -112,7 +120,7 @@ export class Stage2 {
       this.dom.btnRetry.addEventListener('click', () => {
         audio.playSFX('ui-click');
         if (this.dom.failModal) this.dom.failModal.style.display = 'none';
-        this.fullStageReset();
+        this.fullStageReset(true);
       });
     }
 
@@ -167,6 +175,7 @@ export class Stage2 {
       this.dom.sceneContainer.classList.remove('shocked');
     }
 
+    this.pressureValue = 0;
     this.updateHUD();
     this.updateCluesTray();
     this.applyRoundConfig(1);
@@ -179,10 +188,14 @@ export class Stage2 {
   applyRoundConfig(roundNum) {
     const config = ROUND_CONFIG[roundNum - 1] || ROUND_CONFIG[0];
     
-    // Position success zone on track
+    // Position success zone on track & digital display
     if (this.dom.successZone) {
-      this.dom.successZone.style.setProperty('--zone-left', `${config.zoneLeft}%`);
-      this.dom.successZone.style.setProperty('--zone-width', `${config.successZoneSize}%`);
+      this.dom.successZone.style.setProperty('--zone-left', `${config.minVal}%`);
+      this.dom.successZone.style.setProperty('--zone-width', `${config.maxVal - config.minVal}%`);
+    }
+
+    if (this.dom.targetRangeDisplay) {
+      this.dom.targetRangeDisplay.textContent = config.displayText;
     }
 
     if (this.dom.roundDisplay) {
@@ -208,23 +221,29 @@ export class Stage2 {
 
       const elapsed = timestamp - this.startTime;
       
-      // Smooth sine wave oscillation between 2% and 98%
-      const rawSine = Math.sin(elapsed * config.speed);
-      this.pointerPos = 50 + rawSine * 48; // 2% to 98%
+      // Continuous sine sweep oscillating smoothly 0 to 100 to 0 repeatedly
+      // sin oscillates from -1 to +1 -> mapped to 0 to 100
+      const sineWave = (Math.sin(elapsed * config.speed) + 1) / 2; // 0.0 to 1.0
+      this.pressureValue = sineWave * 100; // 0.0 to 100.0
 
-      // Update linear pointer position
-      if (this.dom.meterPointer) {
-        this.dom.meterPointer.style.setProperty('--pointer-pos', `${this.pointerPos}%`);
+      // Update digital readout
+      if (this.dom.pressureValDisplay) {
+        this.dom.pressureValDisplay.textContent = this.pressureValue.toFixed(1);
       }
 
-      // Update circular dial needle angle on the wall (-130deg to +130deg)
-      const dialAngle = -130 + (this.pointerPos / 100) * 260;
-      if (this.dom.dialNeedle) {
-        this.dom.dialNeedle.style.setProperty('--dial-angle', `${dialAngle}deg`);
+      // Update linear track pointer
+      if (this.dom.meterPointer) {
+        this.dom.meterPointer.style.setProperty('--pointer-pos', `${this.pressureValue}%`);
+      }
+
+      // Update circular dial needle rotation (-130deg for 0 to +130deg for 100)
+      const dialRot = -130 + (this.pressureValue / 100) * 260;
+      if (this.dom.dialNeedleWrap) {
+        this.dom.dialNeedleWrap.style.setProperty('--dial-rot', `${dialRot}deg`);
       }
 
       // Periodic meter ticking SFX
-      if (timestamp - this.lastTickTime > 240) {
+      if (timestamp - this.lastTickTime > 260) {
         this.lastTickTime = timestamp;
         audio.playSFX('meter-swing-tick');
       }
@@ -249,10 +268,8 @@ export class Stage2 {
     this.stopMeterLoop();
     const config = ROUND_CONFIG[this.state.round - 1] || ROUND_CONFIG[0];
 
-    const zoneStart = config.zoneLeft;
-    const zoneEnd = config.zoneLeft + config.successZoneSize;
-
-    const isSuccess = (this.pointerPos >= zoneStart && this.pointerPos <= zoneEnd);
+    // Check if stopped in target range
+    const isSuccess = (this.pressureValue >= config.minVal && this.pressureValue <= config.maxVal);
 
     if (isSuccess) {
       this.handleRoundSuccess();
@@ -348,6 +365,10 @@ export class Stage2 {
     this.state.failed = true;
     this.stopMeterLoop();
     audio.playLose();
+
+    if (this.dom.failStoppedVal) {
+      this.dom.failStoppedVal.textContent = this.pressureValue.toFixed(1);
+    }
 
     if (this.dom.failModal) {
       this.dom.failModal.style.display = 'flex';

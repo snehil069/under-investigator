@@ -196,27 +196,50 @@
 
       <!-- Main Stage 2 Chamber Arena -->
       <div class="s2-chamber-view" id="s2-chamber-view">
-        <!-- Interrogation Room Image (Swaps to Shocked on Hit) -->
+        <!-- Interrogation Room Image with Aspect Ratio Fit -->
         <div class="s2-scene-container" id="s2-scene-container">
           <img src="assets/img/stage2_leo_interrogation.png" alt="Interrogation Leo" id="s2-leo-img" class="s2-leo-img" draggable="false">
 
-          <!-- Integrated Dial Needle Overlay positioned directly over the wall meter gauge -->
+          <!-- Interactive Dial Gauge on the Wall Box (Calibrated to 1920x1080) -->
           <div class="s2-dial-overlay" id="s2-dial-overlay">
-            <div class="s2-dial-success-zone" id="s2-dial-success-zone"></div>
-            <div class="s2-dial-needle" id="s2-dial-needle"></div>
-            <div class="s2-dial-cap"></div>
+            <!-- Target Safe Arc on Dial -->
+            <div class="s2-dial-target-wedge" id="s2-dial-target-wedge"></div>
+            <!-- Rotating Glowing Pointer Needle -->
+            <div class="s2-dial-needle-wrap" id="s2-dial-needle-wrap">
+              <div class="s2-dial-needle" id="s2-dial-needle"></div>
+            </div>
+            <!-- Center Cap Hub -->
+            <div class="s2-dial-center-hub"></div>
           </div>
         </div>
 
-        <!-- Lower Control Deck & Linear Target Meter -->
+        <!-- Lower Control Deck & Real-Time Readout -->
         <div class="s2-control-deck">
           <div class="s2-meter-console">
-            <div class="s2-meter-track" id="s2-meter-track">
-              <!-- Success / Red Zone (Shrinks per round) -->
-              <div class="s2-success-zone" id="s2-success-zone">
-                <span class="s2-zone-tag">SAFE ZONE</span>
+            <!-- Digital Readout Screen -->
+            <div class="s2-digital-screen">
+              <div class="s2-digital-row">
+                <span class="s2-digi-label">PRESSURE:</span>
+                <span class="s2-digi-val" id="s2-pressure-val">0.0</span>
               </div>
-              <!-- Moving Pointer Needle -->
+              <div class="s2-digital-row">
+                <span class="s2-digi-label">TARGET:</span>
+                <span class="s2-digi-target" id="s2-target-range-text">43 — 57</span>
+              </div>
+            </div>
+
+            <!-- Horizontal Precision Track for Enhanced Feedback -->
+            <div class="s2-meter-track" id="s2-meter-track">
+              <div class="s2-track-scale">
+                <span>0</span>
+                <span>25</span>
+                <span style="color: #ff5252; font-weight: bold;">50</span>
+                <span>75</span>
+                <span>100</span>
+              </div>
+              <div class="s2-success-zone" id="s2-success-zone">
+                <span class="s2-zone-tag">TARGET</span>
+              </div>
               <div class="s2-meter-pointer" id="s2-meter-pointer"></div>
             </div>
             
@@ -249,8 +272,9 @@
             <h2 style="font-family: var(--font-typewriter); margin-bottom: 8px;">BREAK THE SILENCE</h2>
             <p style="font-size: 15px; color: var(--ink-primary); margin: 12px 0; line-height: 1.5;">
               <strong>OBJECTIVE: MAKE LEO TALK</strong><br>
-              Stop the psychological pressure needle in the <strong>RED ZONE</strong> <strong>3 CONSECUTIVE TIMES</strong>.<br>
-              <em style="color: var(--accent-red);">Warning: The safe zone shrinks after every round. ONE MISS = COMPLETE STAGE RESET!</em>
+              Stop the pressure needle inside the <strong>RED TARGET ZONE</strong> <strong>3 CONSECUTIVE TIMES</strong>.<br>
+              <span style="font-size: 13px; color: var(--ink-muted);">Round 1: 43–57 &nbsp;|&nbsp; Round 2: 46–54 &nbsp;|&nbsp; Round 3: 48–52</span><br>
+              <em style="color: var(--accent-red); font-weight: bold;">ONE MISS = COMPLETE STAGE RESET!</em>
             </p>
             <button id="btn-s2-start-interrogation" class="btn-primary">BEGIN INTERROGATION ▶</button>
           </div>
@@ -264,8 +288,8 @@
             <p style="font-size: 16px; font-weight: bold; color: var(--ink-primary); margin: 12px 0;">
               LEO SHUTS DOWN.<br>THE LEAD IS LOST.
             </p>
-            <p style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">
-              You missed the pressure zone. All Stage 2 progress and clues have been reset.
+            <p style="font-size: 14px; color: var(--ink-muted); margin-bottom: 16px;">
+              Pointer stopped at <strong id="s2-fail-stopped-val" style="color: var(--accent-red);">0.0</strong> outside target range. All Stage 2 clues have been reset.
             </p>
             <button id="btn-s2-retry" class="btn-primary">TRY AGAIN ↺</button>
           </div>

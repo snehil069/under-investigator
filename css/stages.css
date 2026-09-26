@@ -666,10 +666,11 @@
 /* Integrated Dial Gauge Overlay (Over the wall meter on the right) */
 .s2-dial-overlay {
   position: absolute;
-  right: 6.8%;
-  top: 18.5%;
-  width: 15.5%;
+  left: 83.6%;
+  top: 36.85%;
+  width: 17%;
   aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
   pointer-events: none;
   display: flex;
@@ -678,28 +679,63 @@
   z-index: 20;
 }
 
-.s2-dial-needle {
+/* Target Arc Wedge Highlight on Dial */
+.s2-dial-target-wedge {
   position: absolute;
-  width: 3px;
-  height: 48%;
-  bottom: 50%;
-  left: calc(50% - 1.5px);
-  background: linear-gradient(to top, #ff2200, #ffea00);
-  transform-origin: center bottom;
-  transform: rotate(var(--dial-angle, -130deg));
-  box-shadow: 0 0 8px rgba(255, 50, 0, 0.8);
-  border-radius: 2px;
-  transition: transform 0.04s linear;
+  inset: 12%;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 50, 0, 0.4);
+  box-shadow: 0 0 15px rgba(255, 50, 0, 0.6);
+  pointer-events: none;
+  transition: all 0.3s ease;
 }
 
-.s2-dial-cap {
+/* Rotating Needle Wrap */
+.s2-dial-needle-wrap {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: rotate(var(--dial-rot, -130deg));
+  transform-origin: center center;
+  transition: transform 0.016s linear;
+}
+
+/* Glowing fiery needle matching user's photo */
+.s2-dial-needle {
+  position: absolute;
+  bottom: 50%;
+  width: 4px;
+  height: 42%;
+  background: linear-gradient(to top, #ff2200 0%, #ff7700 50%, #ffee22 100%);
+  border-radius: 4px 4px 1px 1px;
+  box-shadow: 0 0 10px #ff6600, 0 0 20px #ff2200;
+  transform-origin: center bottom;
+}
+
+.s2-dial-needle::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-bottom: 5px solid #ffee22;
+}
+
+/* Center Metallic Cap Hub */
+.s2-dial-center-hub {
+  position: absolute;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: #1a1612;
-  border: 2px solid #8c8278;
-  box-shadow: 0 0 4px #000;
+  background: radial-gradient(circle, #3d352e 30%, #15110d 100%);
+  border: 2.5px solid #6e6459;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.2);
   z-index: 25;
 }
 
@@ -708,7 +744,7 @@
   width: 100%;
   background: linear-gradient(180deg, #18130f 0%, #0d0a08 100%);
   border-top: 3px solid var(--border-dark);
-  padding: 12px 24px;
+  padding: 10px 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -720,14 +756,55 @@
   align-items: center;
   gap: 16px;
   width: 100%;
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
 }
 
+/* Digital Readout Screen */
+.s2-digital-screen {
+  background: #090807;
+  border: 2px solid var(--border-dark);
+  border-radius: 4px;
+  padding: 6px 12px;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-typewriter);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.9);
+}
+
+.s2-digital-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.s2-digi-label {
+  color: var(--ink-faint);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.s2-digi-val {
+  color: #ffeb3b;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(255, 235, 59, 0.7);
+}
+
+.s2-digi-target {
+  color: #ff5252;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Linear Track */
 .s2-meter-track {
   position: relative;
   flex: 1;
-  height: 38px;
+  height: 44px;
   background: #110d0a;
   border: 2px solid var(--border-dark);
   box-shadow: inset 0 2px 8px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.5);
@@ -735,17 +812,31 @@
   overflow: hidden;
 }
 
+.s2-track-scale {
+  position: absolute;
+  top: 2px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-typewriter);
+  font-size: 9px;
+  color: var(--ink-faint);
+  pointer-events: none;
+  z-index: 5;
+}
+
 /* Success / Red Zone that shrinks each round */
 .s2-success-zone {
   position: absolute;
-  top: 0;
+  top: 14px;
   bottom: 0;
-  left: var(--zone-left, 38%);
-  width: var(--zone-width, 24%);
+  left: var(--zone-left, 43%);
+  width: var(--zone-width, 14%);
   background: linear-gradient(180deg, #d32f2f 0%, #b71c1c 100%);
   border-left: 2px solid #ff7766;
   border-right: 2px solid #ff7766;
-  box-shadow: 0 0 18px rgba(211, 47, 47, 0.75);
+  box-shadow: 0 0 18px rgba(211, 47, 47, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -765,15 +856,15 @@
 /* Moving Pointer Needle on the Track */
 .s2-meter-pointer {
   position: absolute;
-  top: -2px;
-  bottom: -2px;
+  top: 8px;
+  bottom: 0;
   left: var(--pointer-pos, 0%);
   width: 4px;
   background: #ffea00;
   box-shadow: 0 0 10px #ffcc00, 0 0 18px #ff6600;
   transform: translateX(-50%);
   z-index: 10;
-  transition: left 0.02s linear;
+  transition: left 0.016s linear;
 }
 
 .s2-meter-pointer::after {
@@ -789,10 +880,10 @@
 
 /* Stop Button */
 .s2-stop-btn {
-  min-width: 220px;
+  min-width: 210px;
   min-height: 48px;
-  padding: 10px 20px;
-  font-size: 15px;
+  padding: 10px 18px;
+  font-size: 14px;
   letter-spacing: 1.5px;
 }
 
